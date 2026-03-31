@@ -42,7 +42,7 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => DrivingViewModel()..loadSampleLogs()),
+        ChangeNotifierProvider(create: (_) => DrivingViewModel()),
         ChangeNotifierProvider(create: (_) => LanguageViewModel()),
       ],
       child: const AutoSilencerApp(),
