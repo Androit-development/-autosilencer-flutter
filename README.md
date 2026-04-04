@@ -516,11 +516,7 @@ Pull Request rule:
 
 ---
 
-## 📄 License
 
-This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
-
----
 
 <div align="center">
 
@@ -528,7 +524,7 @@ This project is licensed under the **MIT License** — see [LICENSE](LICENSE) fo
 
 **ICT University, Yaoundé, Cameroon 🇨🇲**
 
-**Instructor: Engr. Daniel MOUNE**
+
 
 <br/>
 
