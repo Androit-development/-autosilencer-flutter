@@ -9,29 +9,33 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
+  # App icons
   cupertino_icons: ^1.0.8
 
-  # State management — MVVM ViewModel pattern
+  # ── State management (Provider / MVVM) ──────────────────────────
   provider: ^6.1.5
 
-  # Space Grotesk + Manrope fonts (from Stitch design)
+  # ── Fonts (Space Grotesk + Manrope) ────────────────────────────
   google_fonts: ^6.2.1
 
-  # Accelerometer sensor
-  sensors_plus: ^6.1.1
-
-  # Microphone noise level
-  noise_meter: ^5.0.2
-
-  # Phone permissions
-  permission_handler: ^11.3.1
-
-  # Supabase backend (Sprint 2)
+  # ── Supabase (cloud database + auth) ───────────────────────────
   supabase_flutter: ^2.8.4
 
-  # Bilingual support
+  # ── Environment variables (.env file) ──────────────────────────
+  flutter_dotenv: ^5.2.1
+
+  # ── Sensors ─────────────────────────────────────────────────────
+  sensors_plus: ^6.1.1
+  noise_meter: ^5.0.2
+
+  # ── Permissions (microphone, etc.) ──────────────────────────────
+  permission_handler: ^11.3.1
+
+  # ── Bilingual support ────────────────────────────────────────────
   flutter_localizations:
     sdk: flutter
+  flutter_foreground_task: ^9.2.2
 
 dev_dependencies:
   flutter_test:
@@ -41,3 +45,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  # Tell Flutter about our .env file
+  assets:
+    - .env
