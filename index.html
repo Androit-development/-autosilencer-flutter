@@ -217,7 +217,7 @@
             <div class="forgot">
                 <a href="#">Forgot password?</a>
             </div>
-            <button class="btn">Sign In</button>
+            <button class="btn" onclick="signIn()">Sign In</button>
             <div class="divider">or</div>
             <button class="google-btn">
                 <img src="https://www.google.com/favicon.ico" width="20">
@@ -250,11 +250,23 @@
 
     <script>
         function showTab(tab, el) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
-            document.getElementById(tab).classList.add('active');
-            el.classList.add('active');
-        }
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
+    document.getElementById(tab).classList.add('active');
+    el.classList.add('active');
+}
+
+function signIn() {
+    const email = document.querySelector('#signin input[type="email"]').value;
+    const password = document.querySelector('#signin input[type="password"]').value;
+    
+    if (email === '' || password === '') {
+        alert('Please enter your email and password!');
+        return;
+    }
+    
+    window.location.href = 'dashboard.html';
+}
     </script>
 </body>
 </html>
