@@ -1,39 +1,81 @@
-// ═══════════════════════════════════════════════════════════════════════════
-// main.dart — AutoSilencer
-// SE 3242: Android Application Development | ICT University Yaoundé
-// Student: Erwan (KFJerwan) | Instructor: Engr. Daniel MOUNE
-//
-// MODULES:
-//   Module 1  → views/splash_screen.dart         Splash / Onboarding
-//   Module 2  → views/home_screen.dart           Main status (safe + alert)
-//   Module 3  → views/history_screen.dart        Session history list
-//   Module 4  → views/settings_screen.dart       Language & preferences
-//   Module 5  → viewmodels/driving_viewmodel.dart Core MVVM state
-//   Module 6  → viewmodels/language_viewmodel.dart EN/FR switching
-//   Module 7  → models/driving_log.dart          Data class
-//   Module 8  → logic/driving_detector.dart      Detection algorithm (Sprint 1)
-//   Module 9  → services/sensor_manager.dart     Sensor abstraction (Sprint 1)
-//   Module 10 → services/supabase_service.dart   Cloud database (Sprint 2)
-//   Module 11 → app_theme.dart                   "Sentinel Glow" design system
-// ═══════════════════════════════════════════════════════════════════════════
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-// ── Module imports ────────────────────────────────────────────────────────
-import 'app_theme.dart';                              // Module 11
-import 'viewmodels/driving_viewmodel.dart';           // Module 5
-import 'viewmodels/language_viewmodel.dart';          // Module 6
-import 'views/splash_screen.dart';                    // Module 1
-import 'views/home_screen.dart';                      // Module 2
-import 'views/history_screen.dart';                   // Module 3
-import 'views/settings_screen.dart';                  // Module 4
+import 'viewmodels/driving_viewmodel.dart';
+import 'viewmodels/language_viewmodel.dart';
+import 'views/splash_screen.dart';
+import 'views/home_screen.dart';
+import 'views/history_screen.dart';
+import 'views/settings_screen.dart';
 
-// ── Entry point ───────────────────────────────────────────────────────────
-void main() {
+// ── Colors ────────────────────────────────────────────────────────────
+class AppColors {
+  AppColors._();
+  static const bgLowest         = Color(0xFF060E1E);
+  static const bgCardHigh       = Color(0xFF222A3B);
+  static const bgCardHighest    = Color(0xFF2D3546);
+  static const primary          = Color(0xFFB0C6FF);
+  static const primaryContainer = Color(0xFF558DFF);
+  static const tertiary         = Color(0xFF00E475);
+  static const error            = Color(0xFFFFB4AB);
+  static const errorContainer   = Color(0xFF93000A);
+  static const onSurface        = Color(0xFFDBE2F9);
+  static const onSurfaceVariant = Color(0xFFC2C6D7);
+  static const outline          = Color(0xFF8C90A0);
+  static const outlineVariant   = Color(0xFF424655);
+
+  static Color primaryGlow(double o)  => const Color(0xFFB0C6FF).withOpacity(o);
+  static Color tertiaryGlow(double o) => const Color(0xFF00E475).withOpacity(o);
+  static Color errorGlow(double o)    => const Color(0xFFFFB4AB).withOpacity(o);
+}
+
+// ── Text styles ───────────────────────────────────────────────────────
+class AppText {
+  AppText._();
+  static TextStyle headline({Color color = AppColors.onSurface, double size = 28}) =>
+      GoogleFonts.spaceGrotesk(fontSize: size, fontWeight: FontWeight.w700, color: color, letterSpacing: -0.5);
+  static TextStyle label({Color color = AppColors.onSurfaceVariant, double size = 11}) =>
+      GoogleFonts.spaceGrotesk(fontSize: size, fontWeight: FontWeight.w600, color: color, letterSpacing: 2.0);
+  static TextStyle body({Color color = AppColors.onSurfaceVariant, double size = 14}) =>
+      GoogleFonts.manrope(fontSize: size, fontWeight: FontWeight.w400, color: color, height: 1.5);
+  static TextStyle bodyBold({Color color = AppColors.onSurface, double size = 14}) =>
+      GoogleFonts.manrope(fontSize: size, fontWeight: FontWeight.w600, color: color);
+  static TextStyle number({Color color = AppColors.primary, double size = 28}) =>
+      GoogleFonts.spaceGrotesk(fontSize: size, fontWeight: FontWeight.w700, color: color);
+  static TextStyle display({Color color = AppColors.onSurface, double size = 44}) =>
+      GoogleFonts.spaceGrotesk(fontSize: size, fontWeight: FontWeight.w800, color: color, letterSpacing: -1.5);
+}
+
+// ── Glass card ────────────────────────────────────────────────────────
+BoxDecoration glassCard({Color? leftBorderColor}) {
+  const bc = AppColors.outlineVariant;
+  return BoxDecoration(
+    color: AppColors.bgCardHigh.withOpacity(0.4),
+    borderRadius: BorderRadius.circular(16),
+    border: leftBorderColor != null
+        ? Border(
+            left:   BorderSide(color: leftBorderColor.withOpacity(0.6), width: 4),
+            right:  BorderSide(color: bc.withOpacity(0.15)),
+            top:    BorderSide(color: bc.withOpacity(0.15)),
+            bottom: BorderSide(color: bc.withOpacity(0.15)),
+          )
+        : Border.all(color: bc.withOpacity(0.15)),
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
+  await Supabase.initialize(
+    url:     dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+  );
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
@@ -50,14 +92,11 @@ void main() {
   );
 }
 
-// ── Root app ──────────────────────────────────────────────────────────────
 class AutoSilencerApp extends StatelessWidget {
   const AutoSilencerApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageViewModel>();
-
     return MaterialApp(
       title: 'AutoSilencer',
       debugShowCheckedModeBanner: false,
@@ -79,7 +118,6 @@ class AutoSilencerApp extends StatelessWidget {
           error: AppColors.error,
         ),
       ),
-      // Named routes — Navigation pattern from lecturer's slides
       initialRoute: '/splash',
       routes: {
         '/splash':   (_) => const SplashScreen(),
@@ -90,52 +128,57 @@ class AutoSilencerApp extends StatelessWidget {
   }
 }
 
-// ── App Shell — hosts bottom nav + screens ────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════
+// AppShell — exposes switchToHistory() so HomeScreen can call it
+// ══════════════════════════════════════════════════════════════════════
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
   @override
-  State<AppShell> createState() => _AppShellState();
+  State<AppShell> createState() => AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
-  int _currentIndex = 0;
+// PUBLIC state class so HomeScreen can find it with findAncestorStateOfType
+class AppShellState extends State<AppShell> {
+  int _idx = 0;
 
-  final List<Widget> _screens = const [
-    HomeScreen(),    // Module 2
-    HistoryScreen(), // Module 3
-  ];
+  // Called by HomeScreen STOP button to switch to history tab
+  void switchToHistory() {
+    setState(() => _idx = 1);
+    // Also load fresh data from Supabase
+    context.read<DrivingViewModel>().loadLogs();
+  }
+
+  final List<Widget> _screens = const [HomeScreen(), HistoryScreen()];
 
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageViewModel>();
-
     return Scaffold(
       backgroundColor: AppColors.bgLowest,
-      body: IndexedStack(index: _currentIndex, children: _screens),
-      bottomNavigationBar: _BottomNavPod(
-        currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
-        homeLabel:    lang.t('HOME', 'HOME'),
-        historyLabel: lang.t('HISTORY', 'HISTORIQUE'),
+      body: IndexedStack(index: _idx, children: _screens),
+      bottomNavigationBar: _BottomNav(
+        idx:        _idx,
+        onTap:      (i) {
+          setState(() => _idx = i);
+          if (i == 1) context.read<DrivingViewModel>().loadLogs();
+        },
+        homeLabel:     lang.t('HOME',     'HOME'),
+        historyLabel:  lang.t('HISTORY',  'HISTORIQUE'),
         settingsLabel: lang.t('SETTINGS', 'RÉGLAGES'),
-        onSettingsTap: () => Navigator.pushNamed(context, '/settings'),
+        onSettings:    () => Navigator.pushNamed(context, '/settings'),
       ),
     );
   }
 }
 
-// ── Floating glass bottom nav "pod" — from Stitch design ─────────────────
-class _BottomNavPod extends StatelessWidget {
-  final int currentIndex;
+class _BottomNav extends StatelessWidget {
+  final int idx;
   final Function(int) onTap;
   final String homeLabel, historyLabel, settingsLabel;
-  final VoidCallback onSettingsTap;
-
-  const _BottomNavPod({
-    required this.currentIndex, required this.onTap,
+  final VoidCallback onSettings;
+  const _BottomNav({required this.idx, required this.onTap,
     required this.homeLabel, required this.historyLabel,
-    required this.settingsLabel, required this.onSettingsTap,
-  });
+    required this.settingsLabel, required this.onSettings});
 
   @override
   Widget build(BuildContext context) {
@@ -146,65 +189,39 @@ class _BottomNavPod extends StatelessWidget {
         color: AppColors.bgCardHighest.withOpacity(0.70),
         borderRadius: BorderRadius.circular(40),
         border: Border.all(color: Colors.white.withOpacity(0.12)),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.4),
-              blurRadius: 24, offset: const Offset(0, 8)),
-          BoxShadow(color: AppColors.primary.withOpacity(0.06),
-              blurRadius: 12),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 24, offset: const Offset(0, 8))],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _NavBtn(icon: Icons.home_rounded,        label: homeLabel,
-              selected: currentIndex == 0, onTap: () => onTap(0)),
-          _NavBtn(icon: Icons.history_rounded,     label: historyLabel,
-              selected: currentIndex == 1, onTap: () => onTap(1)),
-          _NavBtn(icon: Icons.settings_outlined,   label: settingsLabel,
-              selected: false, onTap: onSettingsTap),
+          _Btn(icon: Icons.home_rounded,      label: homeLabel,     sel: idx==0, onTap: ()=>onTap(0)),
+          _Btn(icon: Icons.history_rounded,   label: historyLabel,  sel: idx==1, onTap: ()=>onTap(1)),
+          _Btn(icon: Icons.settings_outlined, label: settingsLabel, sel: false,  onTap: onSettings),
         ],
       ),
     );
   }
 }
 
-class _NavBtn extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _NavBtn({required this.icon, required this.label,
-      required this.selected, required this.onTap});
-
+class _Btn extends StatelessWidget {
+  final IconData icon; final String label; final bool sel; final VoidCallback onTap;
+  const _Btn({required this.icon, required this.label, required this.sel, required this.onTap});
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primary.withOpacity(0.12) : Colors.transparent,
-          borderRadius: BorderRadius.circular(32),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon,
-              color: selected ? AppColors.primary : AppColors.onSurfaceVariant,
-              size: 22),
-            const SizedBox(height: 3),
-            Text(label,
-              style: AppText.label(
-                color: selected ? AppColors.primary : AppColors.onSurfaceVariant,
-                size: 9,
-              ),
-            ),
-          ],
-        ),
+  Widget build(BuildContext context) => GestureDetector(
+    onTap: onTap,
+    behavior: HitTestBehavior.opaque,
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: sel ? AppColors.primary.withOpacity(0.12) : Colors.transparent,
+        borderRadius: BorderRadius.circular(32),
       ),
-    );
-  }
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Icon(icon, color: sel ? AppColors.primary : AppColors.onSurfaceVariant, size: 22),
+        const SizedBox(height: 3),
+        Text(label, style: AppText.label(color: sel ? AppColors.primary : AppColors.onSurfaceVariant, size: 9)),
+      ]),
+    ),
+  );
 }
