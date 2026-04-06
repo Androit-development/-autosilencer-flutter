@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../app_theme.dart';
 import '../viewmodels/language_viewmodel.dart';
+import '../services/permissions_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -53,6 +54,25 @@ class _SplashScreenState extends State<SplashScreen>
       ..repeat(reverse: true);
     _floatAnim = Tween<double>(begin: -8.0, end: 8.0)
         .animate(CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut));
+
+    // 🎤 Request permissions on app startup
+    _requestPermissionsOnStart();
+  }
+
+  // ── Request microphone & sensor permissions ────────────────────────
+  Future<void> _requestPermissionsOnStart() async {
+    await Future.delayed(const Duration(milliseconds: 1500)); // Let splash animate
+    
+    if (!mounted) return;
+
+    debugPrint('🎤 Requesting permissions...');
+    final granted = await PermissionsService.requestAllPermissions();
+    
+    if (granted) {
+      debugPrint('✅ All permissions granted');
+    } else {
+      debugPrint('⚠️ Some permissions were denied');
+    }
   }
 
   @override

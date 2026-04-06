@@ -70,9 +70,9 @@ class DrivingViewModel extends ChangeNotifier {
     _noise        = 0.0;
     notifyListeners();
 
-    // 1. Accelerometer — reads every 500ms
+    // 1. Accelerometer — reads every 250ms (4x per second) for better sensitivity
     _accelSub = accelerometerEventStream(
-      samplingPeriod: const Duration(milliseconds: 500),
+      samplingPeriod: const Duration(milliseconds: 250),
     ).listen(
       (AccelerometerEvent e) {
         // magnitude of total acceleration vector

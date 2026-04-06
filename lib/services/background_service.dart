@@ -71,7 +71,7 @@ class AutoSilencerTaskHandler extends TaskHandler {
 
   void _startSensors() {
     _accelSub = accelerometerEventStream(
-      samplingPeriod: SensorThresholds.sensorSampling,
+      samplingPeriod: const Duration(milliseconds: 250), // 4x per second for better sensitivity
     ).listen(
       (e) {
         final mag = sqrt(e.x * e.x + e.y * e.y + e.z * e.z);

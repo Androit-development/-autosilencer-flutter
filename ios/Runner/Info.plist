@@ -66,5 +66,14 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+
+	<!-- ── Microphone Permission ── -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>AutoSilencer needs microphone access to detect road noise and vehicles. This helps determine when you're driving so your phone can be automatically silenced.</string>
+
+	<!-- ── Motion & Sensors Permission ── -->
+	<key>NSMotionUsageDescription</key>
+	<string>AutoSilencer needs motion sensor access to detect vehicle movement and acceleration patterns. This helps accurately identify when you're driving.</string>
+
 </dict>
 </plist>

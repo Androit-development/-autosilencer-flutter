@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../main.dart';
 import '../viewmodels/driving_viewmodel.dart';
 import '../viewmodels/language_viewmodel.dart';
+import '../services/permissions_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -542,6 +543,20 @@ class _ActionButton extends StatelessWidget {
                 ?.switchToHistory();
           }
         } else {
+          // 🎤 Check permissions before starting monitoring
+          final permissionsGranted = 
+              await PermissionsService.checkAllPermissions();
+          
+          if (!context.mounted) return;
+
+          if (!(permissionsGranted['microphone'] ?? false) ||
+              !(permissionsGranted['sensors'] ?? false)) {
+            // Show permission request dialog
+            _showPermissionDialog(context, permissionsGranted);
+            return;
+          }
+
+          // All permissions granted, start monitoring
           await vm.startMonitoring();
         }
       },
@@ -585,6 +600,141 @@ class _ActionButton extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  // 🎤 Show permission request dialog
+  void _showPermissionDialog(
+    BuildContext context,
+    Map<String, bool> permissions,
+  ) {
+    final micGranted = permissions['microphone'] ?? false;
+    final sensorGranted = permissions['sensors'] ?? false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.bgCardHighest,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          lang.t('Permissions Required', 'Permissions requises'),
+          style: AppText.headline(size: 18),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              lang.t(
+                'AutoSilencer needs these permissions:',
+                'AutoSilencer a besoin de ces permissions:',
+              ),
+              style: AppText.body(size: 14),
+            ),
+            const SizedBox(height: 16),
+            _PermissionCheckItem(
+              icon: Icons.mic_rounded,
+              label: lang.t('Microphone', 'Microphone'),
+              description: lang.t(
+                'Detect road noise',
+                'Détecter les bruits de la route',
+              ),
+              granted: micGranted,
+            ),
+            const SizedBox(height: 12),
+            _PermissionCheckItem(
+              icon: Icons.sensors_rounded,
+              label: lang.t('Motion Sensors', 'Capteurs de mouvement'),
+              description: lang.t(
+                'Detect vehicle movement',
+                'Détecter le mouvement du véhicule',
+              ),
+              granted: sensorGranted,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(lang.t('Cancel', 'Annuler')),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              // Request permissions again
+              await PermissionsService.requestAllPermissions();
+            },
+            child: Text(lang.t('Request Permissions', 'Demander les permissions')),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Permission check item widget
+// ─────────────────────────────────────────────────────────────────────────────
+class _PermissionCheckItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String description;
+  final bool granted;
+
+  const _PermissionCheckItem({
+    required this.icon,
+    required this.label,
+    required this.description,
+    required this.granted,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: granted
+                ? AppColors.tertiary.withOpacity(0.2)
+                : AppColors.error.withOpacity(0.2),
+          ),
+          child: Icon(
+            icon,
+            color: granted ? AppColors.tertiary : AppColors.error,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: AppText.bodyBold(size: 13),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                description,
+                style: AppText.body(
+                  color: AppColors.onSurfaceVariant,
+                  size: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Icon(
+          granted ? Icons.check_circle : Icons.cancel,
+          color: granted ? AppColors.tertiary : AppColors.error,
+          size: 20,
+        ),
+      ],
     );
   }
 }
