@@ -8,7 +8,10 @@
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
 [![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.io)
 [![Android](https://img.shields.io/badge/Android-API%2027+-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com)
+ demo/lecturer-presentation
 [![License](https://img.shields.io/badge/License-MIT-B0C6FF?style=for-the-badge)](LICENSE)
+
+ main
 [![Sprint](https://img.shields.io/badge/Sprint%201-Complete-00E676?style=for-the-badge)]()
 
 <br/>
@@ -515,13 +518,7 @@ Pull Request rule:
   Every branch → PR → teammate reviews → merge to main
 ```
 
----
 
-## 📄 License
-
-This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
-
----
 
 <div align="center">
 
@@ -529,12 +526,10 @@ This project is licensed under the **MIT License** — see [LICENSE](LICENSE) fo
 
 **ICT University, Yaoundé, Cameroon 🇨🇲**
 
-**Instructor: Engr. Daniel MOUNE**
+
 
 <br/>
 
-*Built with ❤️ in Cameroon — because every safe arrival matters.*
+*Built with ❤️  — because every safe arrival matters.*
 
 <img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0:2979FF,50:1a3a6e,100:060E1E&height=120&section=footer"/>
-
-</div>
