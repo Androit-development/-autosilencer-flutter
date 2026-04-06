@@ -8,10 +8,6 @@
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
 [![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.io)
 [![Android](https://img.shields.io/badge/Android-API%2027+-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com)
- demo/lecturer-presentation
-[![License](https://img.shields.io/badge/License-MIT-B0C6FF?style=for-the-badge)](LICENSE)
-
- main
 [![Sprint](https://img.shields.io/badge/Sprint%201-Complete-00E676?style=for-the-badge)]()
 
 <br/>
