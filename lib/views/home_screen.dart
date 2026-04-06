@@ -1,12 +1,7 @@
-// ═══════════════════════════════════════════════════════════════════════════
-// Module 2: views/home_screen.dart
-// Two states: SAFE (green rings) and DRIVING DETECTED (red rings + alert)
-// Animated concentric rings — "Status Rings" signature component
-// ═══════════════════════════════════════════════════════════════════════════
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../app_theme.dart';
+import '../main.dart';
 import '../viewmodels/driving_viewmodel.dart';
 import '../viewmodels/language_viewmodel.dart';
 
@@ -17,37 +12,40 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-
-  // Outer ring slow rotation
   late final AnimationController _rotCtrl;
-  // Inner ring breathe
   late final AnimationController _breatheCtrl;
-  late final Animation<double> _breatheAnim;
-  // Ping pulse (driving alert)
+  late final Animation<double>   _breatheAnim;
   late final AnimationController _pingCtrl;
-  late final Animation<double> _pingAnim;
-  // Color transition
-  late final AnimationController _colorCtrl;
+  late final Animation<double>   _pingAnim;
+  late final AnimationController _entranceCtrl;
+  late final Animation<double>   _entranceAnim;
 
   @override
   void initState() {
     super.initState();
 
-    _rotCtrl = AnimationController(vsync: this,
-        duration: const Duration(seconds: 12))..repeat();
+    // Slow rotation of outer dashed ring
+    _rotCtrl = AnimationController(
+        vsync: this, duration: const Duration(seconds: 14))..repeat();
 
-    _breatheCtrl = AnimationController(vsync: this,
-        duration: const Duration(milliseconds: 2000))..repeat(reverse: true);
-    _breatheAnim = Tween<double>(begin: 1.0, end: 1.06)
+    // Breathing pulse on inner circle when monitoring
+    _breatheCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 2200))
+      ..repeat(reverse: true);
+    _breatheAnim = Tween<double>(begin: 1.0, end: 1.07)
         .animate(CurvedAnimation(parent: _breatheCtrl, curve: Curves.easeInOut));
 
-    _pingCtrl = AnimationController(vsync: this,
-        duration: const Duration(milliseconds: 1200))..repeat();
-    _pingAnim = Tween<double>(begin: 1.0, end: 1.6)
+    // Ping expansion ring when driving
+    _pingCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1400))..repeat();
+    _pingAnim = Tween<double>(begin: 0.85, end: 1.65)
         .animate(CurvedAnimation(parent: _pingCtrl, curve: Curves.easeOut));
 
-    _colorCtrl = AnimationController(vsync: this,
-        duration: const Duration(milliseconds: 600));
+    // Entrance fade-slide on first load
+    _entranceCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 900));
+    _entranceAnim = CurvedAnimation(parent: _entranceCtrl, curve: Curves.easeOut);
+    _entranceCtrl.forward();
   }
 
   @override
@@ -55,209 +53,182 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _rotCtrl.dispose();
     _breatheCtrl.dispose();
     _pingCtrl.dispose();
-    _colorCtrl.dispose();
+    _entranceCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final vm   = context.watch<DrivingViewModel>();
-    final lang = context.watch<LanguageViewModel>();
-
-    // State-dependent colors
-    final stateColor = vm.isDriving ? AppColors.error : AppColors.tertiary;
-    final stateGlow  = vm.isDriving
-        ? AppColors.errorGlow(0.20)
-        : AppColors.tertiaryGlow(0.15);
+    final vm         = context.watch<DrivingViewModel>();
+    final lang       = context.watch<LanguageViewModel>();
+    final stateColor = vm.isDriving
+        ? AppColors.error
+        : vm.isMonitoring
+            ? AppColors.tertiary
+            : AppColors.primary;
 
     return Scaffold(
       backgroundColor: AppColors.bgLowest,
       body: Stack(
         children: [
-          // ── Ambient glow blobs ──────────────────────────────────────────
-          Positioned(top: 100, left: -60,
-            child: _blob(AppColors.primary, 200, 0.08)),
-          Positioned(bottom: 200, right: -60,
-            child: _blob(stateColor, 200, 0.10)),
+          // ── Ambient background glows ──────────────────────────────────
+          Positioned(top: 60, left: -100,
+            child: _GlowBlob(color: AppColors.primary, r: 250, o: 0.09)),
+          Positioned(bottom: 150, right: -100,
+            child: _GlowBlob(color: stateColor, r: 260, o: 0.11)),
+          Positioned(top: 300, right: -60,
+            child: _GlowBlob(color: AppColors.tertiary, r: 180, o: 0.05)),
 
           SafeArea(
-            child: Column(
-              children: [
-                // ── Top App Bar ───────────────────────────────────────────
-                _TopBar(lang: lang),
+            child: FadeTransition(
+              opacity: _entranceAnim,
+              // ── SCROLLABLE — fixes overflow and makes it movable ──────
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: [
+                    // ── Top bar ─────────────────────────────────────────
+                    _TopBar(lang: lang),
+                    const SizedBox(height: 20),
 
-                // ── Status header ─────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        lang.t('CURRENT STATUS', 'STATUT ACTUEL'),
-                        style: AppText.label(),
+                    // ── Status label ────────────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            lang.t('CURRENT STATUS', 'STATUT ACTUEL'),
+                            style: AppText.label(size: 10),
+                          ),
+                          const SizedBox(height: 6),
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 500),
+                            child: Text(
+                              vm.isDriving
+                                  ? lang.t('Driving detected.\nStay focused.',
+                                            'Conduite détectée.\nRestez concentré.')
+                                  : vm.isMonitoring
+                                      ? lang.t('All clear.\nDrive safely.',
+                                                'Tout va bien.\nConduisez prudemment.')
+                                      : lang.t('Ready to\nmonitor.',
+                                                'Prêt à\nsurveiller.'),
+                              key: ValueKey('${vm.isDriving}${vm.isMonitoring}'),
+                              style: AppText.headline(size: 26),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        lang.t('Drive safely,\nstay alert.',
-                               'Conduisez en toute\nsécurité, restez vigilant.'),
-                        style: AppText.headline(size: 24),
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
 
-                // ── Animated status ring ──────────────────────────────────
-                Expanded(
-                  child: Center(
-                    child: AnimatedBuilder(
-                      animation: Listenable.merge([_rotCtrl, _breatheCtrl, _pingCtrl]),
+                    const SizedBox(height: 24),
+
+                    // ── Animated status ring ─────────────────────────────
+                    AnimatedBuilder(
+                      animation: Listenable.merge(
+                          [_rotCtrl, _breatheCtrl, _pingCtrl]),
                       builder: (_, __) => _StatusRing(
-                        isDriving:    vm.isDriving,
-                        isMonitoring: vm.isMonitoring,
+                        vm:           vm,
+                        lang:         lang,
                         stateColor:   stateColor,
-                        stateGlow:    stateGlow,
                         rotValue:     _rotCtrl.value,
                         breatheScale: _breatheAnim.value,
                         pingScale:    _pingAnim.value,
-                        lang:         lang,
                       ),
                     ),
-                  ),
-                ),
 
-                // ── Stats row ─────────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children: [
-                      Expanded(child: _StatCard(
-                        icon: Icons.bolt_rounded,
-                        iconColor: AppColors.primary,
-                        label: lang.t('MOTION', 'MOUVEMENT'),
-                        value: '${vm.motionLevel.toStringAsFixed(1)} m/s²',
-                        barHeights: const [4, 6, 5, 7, 4],
-                        barColor: AppColors.primary,
-                        chipLabel: lang.t('Normal', 'Normal'),
-                        chipColor: AppColors.tertiary,
-                      )),
-                      const SizedBox(width: 12),
-                      Expanded(child: _StatCard(
-                        icon: Icons.graphic_eq_rounded,
-                        iconColor: AppColors.tertiary,
-                        label: lang.t('NOISE LEVEL', 'NIVEAU SONORE'),
-                        value: '${vm.noiseLevel.toStringAsFixed(0)} dB',
-                        barHeights: const [3, 8, 5, 10, 6, 9, 4, 7],
-                        barColor: vm.isDriving ? AppColors.error : AppColors.tertiary,
-                        chipLabel: lang.t('Calm', 'Calme'),
-                        chipColor: vm.isDriving ? AppColors.error : AppColors.tertiary,
-                      )),
+                    const SizedBox(height: 24),
+
+                    // ── Sensor stat cards ────────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        children: [
+                          Expanded(child: _StatCard(
+                            icon:      Icons.bolt_rounded,
+                            iconColor: AppColors.primary,
+                            label:     lang.t('MOTION', 'MOUVEMENT'),
+                            value:     vm.isMonitoring
+                                ? '${vm.motionLevel.toStringAsFixed(2)}'
+                                : '—',
+                            unit:      'm/s²',
+                            chipLabel: vm.isDriving
+                                ? lang.t('HIGH', 'ÉLEVÉ')
+                                : lang.t('Normal', 'Normal'),
+                            chipColor: vm.isDriving
+                                ? AppColors.error
+                                : AppColors.tertiary,
+                          )),
+                          const SizedBox(width: 12),
+                          Expanded(child: _StatCard(
+                            icon:      Icons.graphic_eq_rounded,
+                            iconColor: AppColors.tertiary,
+                            label:     lang.t('NOISE', 'BRUIT'),
+                            value:     vm.isMonitoring
+                                ? '${vm.noiseLevel.toStringAsFixed(0)}'
+                                : '—',
+                            unit:      'dB',
+                            chipLabel: vm.isDriving
+                                ? lang.t('HIGH', 'ÉLEVÉ')
+                                : lang.t('Calm', 'Calme'),
+                            chipColor: vm.isDriving
+                                ? AppColors.error
+                                : AppColors.tertiary,
+                          )),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // ── Alert banner (driving only) ──────────────────────
+                    if (vm.isDriving) ...[
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: _AlertBanner(lang: lang),
+                      ),
+                      const SizedBox(height: 16),
                     ],
-                  ),
+
+                    // ── Start / Stop button ──────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: _ActionButton(vm: vm, lang: lang),
+                    ),
+
+                    const SizedBox(height: 8),
+                    Text(
+                      lang.t(
+                        'Tap to activate automatic detection',
+                        'Appuyez pour activer la détection automatique',
+                      ),
+                      style: AppText.body(size: 11),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 28),
+                  ],
                 ),
-
-                const SizedBox(height: 16),
-
-                // ── Alert banner (only when driving) ─────────────────────
-                if (vm.isDriving)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                    child: _AlertBanner(lang: lang),
-                  ),
-
-                // ── Main action button ────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: _ActionButton(vm: vm, lang: lang),
-                ),
-
-                const SizedBox(height: 8),
-                Text(
-                  lang.t('Tap to activate detection',
-                         'Appuyez pour activer la détection'),
-                  style: AppText.body(size: 12),
-                ),
-                const SizedBox(height: 16),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _blob(Color c, double r, double o) => Container(
-    width: r*2, height: r*2,
-    decoration: BoxDecoration(
-      shape: BoxShape.circle,
-      boxShadow: [BoxShadow(color: c.withOpacity(o), blurRadius: r*1.5, spreadRadius: r*0.2)],
-    ),
-  );
-}
-
-// ── Top App Bar ───────────────────────────────────────────────────────────────
-class _TopBar extends StatelessWidget {
-  final LanguageViewModel lang;
-  const _TopBar({required this.lang});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.3),
-        border: Border(
-          bottom: BorderSide(color: Colors.white.withOpacity(0.06)),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.shield_rounded, color: AppColors.primary, size: 22),
-          const SizedBox(width: 10),
-          Text('AutoSilencer',
-            style: AppText.headline(size: 18, color: AppColors.onSurface)),
-          const Spacer(),
-          // Language toggle
-          GestureDetector(
-            onTap: () => lang.toggle(),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.bgCardHigh.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white.withOpacity(0.1)),
               ),
-              child: Text(lang.langLabel,
-                style: AppText.label(color: AppColors.primary, size: 11)),
             ),
           ),
-          const SizedBox(width: 12),
-          Text('PRO MODE',
-            style: AppText.label(color: AppColors.primary, size: 11)),
-          const SizedBox(width: 12),
-          Icon(Icons.settings_outlined,
-              color: AppColors.onSurfaceVariant, size: 20),
         ],
       ),
     );
   }
 }
 
-// ── Status Ring — the signature component ─────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// STATUS RING — the animated concentric rings
+// ─────────────────────────────────────────────────────────────────────────────
 class _StatusRing extends StatelessWidget {
-  final bool isDriving;
-  final bool isMonitoring;
-  final Color stateColor;
-  final Color stateGlow;
-  final double rotValue;
-  final double breatheScale;
-  final double pingScale;
+  final DrivingViewModel vm;
   final LanguageViewModel lang;
+  final Color stateColor;
+  final double rotValue, breatheScale, pingScale;
 
   const _StatusRing({
-    required this.isDriving, required this.isMonitoring,
-    required this.stateColor, required this.stateGlow,
-    required this.rotValue, required this.breatheScale,
-    required this.pingScale, required this.lang,
+    required this.vm, required this.lang, required this.stateColor,
+    required this.rotValue, required this.breatheScale, required this.pingScale,
   });
 
   @override
@@ -267,8 +238,9 @@ class _StatusRing extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Ping pulse ring (only driving)
-          if (isDriving)
+
+          // Outermost ping ring — only when driving
+          if (vm.isDriving)
             Transform.scale(
               scale: pingScale,
               child: Container(
@@ -276,85 +248,105 @@ class _StatusRing extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: stateColor.withOpacity(0.3 * (1 - (pingScale - 1) / 0.6)),
+                    color: stateColor.withOpacity(
+                      (0.5 * (1 - (pingScale - 0.85) / 0.8)).clamp(0, 0.5)),
                     width: 1.5,
                   ),
                 ),
               ),
             ),
 
-          // Outer dashed rotating ring
+          // Second ping ring offset
+          if (vm.isDriving)
+            Transform.scale(
+              scale: (pingScale * 0.78).clamp(0.6, 1.3),
+              child: Container(
+                width: 240, height: 240,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: stateColor.withOpacity(0.15),
+                    width: 1,
+                  ),
+                ),
+              ),
+            ),
+
+          // Rotating dashed outer ring
           Transform.rotate(
             angle: rotValue * 2 * math.pi,
             child: CustomPaint(
-              size: const Size(230, 230),
+              size: const Size(220, 220),
               painter: _DashedRingPainter(
-                color: stateColor.withOpacity(isMonitoring ? 0.30 : 0.12),
+                color: stateColor.withOpacity(
+                    vm.isMonitoring ? 0.40 : 0.18),
               ),
             ),
           ),
 
           // Middle solid ring
           Container(
-            width: 196, height: 196,
+            width: 186, height: 186,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: stateColor.withOpacity(0.45), width: 1.5),
+              border: Border.all(
+                  color: stateColor.withOpacity(0.35), width: 1.5),
             ),
           ),
 
-          // Inner glass circle with glow
+          // Inner glowing filled circle — breathes when monitoring
           Transform.scale(
-            scale: isMonitoring ? breatheScale : 1.0,
+            scale: vm.isMonitoring ? breatheScale : 1.0,
             child: Container(
-              width: 162, height: 162,
+              width: 154, height: 154,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    stateColor.withOpacity(0.12),
-                    AppColors.bgCardHigh.withOpacity(0.9),
-                  ],
-                ),
-                border: Border.all(color: stateColor.withOpacity(0.35), width: 1.5),
+                gradient: RadialGradient(colors: [
+                  stateColor.withOpacity(0.18),
+                  AppColors.bgCardHigh.withOpacity(0.96),
+                ]),
+                border: Border.all(
+                    color: stateColor.withOpacity(0.45), width: 1.5),
                 boxShadow: [
-                  BoxShadow(color: stateGlow, blurRadius: 40, spreadRadius: 8),
+                  BoxShadow(
+                    color: stateColor.withOpacity(0.22),
+                    blurRadius: 40,
+                    spreadRadius: 6,
+                  ),
                 ],
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    isDriving ? Icons.local_shipping_outlined
-                              : Icons.directions_car_rounded,
-                    size: 52,
-                    color: stateColor,
-                  ),
-                  const SizedBox(height: 10),
+                  // Animated icon switch
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 400),
-                    child: Text(
-                      isDriving
-                          ? lang.t('DRIVING\nDETECTED', 'CONDUITE\nDÉTECTÉE')
-                          : lang.t('ALL\nCLEAR', 'TOUT VA\nBIEN'),
-                      key: ValueKey(isDriving),
-                      textAlign: TextAlign.center,
-                      style: AppText.label(color: stateColor, size: 10),
+                    transitionBuilder: (child, anim) =>
+                        ScaleTransition(scale: anim, child: child),
+                    child: Icon(
+                      vm.isDriving
+                          ? Icons.directions_car_filled_rounded
+                          : vm.isMonitoring
+                              ? Icons.shield_rounded
+                              : Icons.shield_outlined,
+                      key: ValueKey('${vm.isDriving}${vm.isMonitoring}'),
+                      size: 48,
+                      color: stateColor,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _PingDot(color: stateColor, animate: isDriving),
-                      const SizedBox(width: 5),
-                      Text(
-                        isDriving
-                            ? lang.t('Silent mode ON', 'Mode silencieux')
-                            : lang.t('Monitoring', 'En surveillance'),
-                        style: AppText.body(color: stateColor, size: 10),
-                      ),
-                    ],
+                  const SizedBox(height: 8),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: Text(
+                      vm.isDriving
+                          ? lang.t('DRIVING', 'CONDUITE')
+                          : vm.isMonitoring
+                              ? lang.t('SAFE', 'SÛR')
+                              : lang.t('IDLE', 'EN ATTENTE'),
+                      key: ValueKey(
+                          '${vm.isDriving}${vm.isMonitoring}_label'),
+                      style: AppText.label(color: stateColor, size: 10),
+                    ),
                   ),
                 ],
               ),
@@ -366,22 +358,71 @@ class _StatusRing extends StatelessWidget {
   }
 }
 
-// ── Stat card ─────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// TOP BAR
+// ─────────────────────────────────────────────────────────────────────────────
+class _TopBar extends StatelessWidget {
+  final LanguageViewModel lang;
+  const _TopBar({required this.lang});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+      child: Row(
+        children: [
+          // Shield icon + app name
+          Icon(Icons.shield_rounded, color: AppColors.primary, size: 22),
+          const SizedBox(width: 10),
+          Text('AutoSilencer', style: AppText.headline(size: 18)),
+          const Spacer(),
+
+          // Language toggle pill
+          GestureDetector(
+            onTap: lang.toggle,
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppColors.bgCardHigh.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(8),
+                border:
+                    Border.all(color: Colors.white.withOpacity(0.1)),
+              ),
+              child: Text(lang.langLabel,
+                  style:
+                      AppText.label(color: AppColors.primary, size: 11)),
+            ),
+          ),
+
+          const SizedBox(width: 10),
+
+          // Settings icon → navigate to settings screen
+          GestureDetector(
+            onTap: () => Navigator.pushNamed(context, '/settings'),
+            child: Icon(Icons.settings_outlined,
+                color: AppColors.onSurfaceVariant, size: 22),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STAT CARD
+// ─────────────────────────────────────────────────────────────────────────────
 class _StatCard extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
-  final String label;
-  final String value;
-  final List<int> barHeights;
-  final Color barColor;
-  final String chipLabel;
+  final String label, value, unit, chipLabel;
   final Color chipColor;
 
   const _StatCard({
     required this.icon, required this.iconColor,
     required this.label, required this.value,
-    required this.barHeights, required this.barColor,
-    required this.chipLabel, required this.chipColor,
+    required this.unit,  required this.chipLabel,
+    required this.chipColor,
   });
 
   @override
@@ -392,45 +433,46 @@ class _StatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: iconColor, size: 20),
+          Row(children: [
+            Icon(icon, color: iconColor, size: 18),
+            const SizedBox(width: 6),
+            Text(label, style: AppText.label(size: 10)),
+          ]),
           const SizedBox(height: 10),
-          Text(label, style: AppText.label(size: 10)),
-          const SizedBox(height: 4),
-          Text(value, style: AppText.number(color: AppColors.onSurface, size: 22)),
+          RichText(
+            text: TextSpan(children: [
+              TextSpan(
+                text: value,
+                style: AppText.number(
+                    color: AppColors.onSurface, size: 22),
+              ),
+              TextSpan(
+                text: '  $unit',
+                style: AppText.body(size: 11),
+              ),
+            ]),
+          ),
           const SizedBox(height: 8),
-          // Mini bar chart
-          Row(
-            children: barHeights.map((h) => Container(
-              width: 5, height: h.toDouble(),
-              margin: const EdgeInsets.only(right: 3),
+          Row(children: [
+            Container(
+              width: 6, height: 6,
               decoration: BoxDecoration(
-                color: barColor,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            )).toList(),
-          ),
-          const SizedBox(height: 8),
-          // Status chip
-          Row(
-            children: [
-              Container(
-                width: 7, height: 7,
-                decoration: BoxDecoration(
-                  color: chipColor, shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 5),
-              Text(chipLabel,
-                style: AppText.label(color: AppColors.onSurfaceVariant, size: 10)),
-            ],
-          ),
+                  shape: BoxShape.circle, color: chipColor),
+            ),
+            const SizedBox(width: 5),
+            Text(chipLabel,
+                style: AppText.label(
+                    color: AppColors.onSurfaceVariant, size: 9)),
+          ]),
         ],
       ),
     );
   }
 }
 
-// ── Alert banner ──────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// ALERT BANNER
+// ─────────────────────────────────────────────────────────────────────────────
 class _AlertBanner extends StatelessWidget {
   final LanguageViewModel lang;
   const _AlertBanner({required this.lang});
@@ -438,38 +480,46 @@ class _AlertBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding:
+          const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.error.withOpacity(0.08),
         borderRadius: BorderRadius.circular(14),
         border: Border(
-          left: BorderSide(color: AppColors.error.withOpacity(0.6), width: 4),
-          right: BorderSide(color: AppColors.error.withOpacity(0.15)),
-          top: BorderSide(color: AppColors.error.withOpacity(0.15)),
-          bottom: BorderSide(color: AppColors.error.withOpacity(0.15)),
+          left:   BorderSide(
+              color: AppColors.error.withOpacity(0.6), width: 4),
+          right:  BorderSide(
+              color: AppColors.error.withOpacity(0.15)),
+          top:    BorderSide(
+              color: AppColors.error.withOpacity(0.15)),
+          bottom: BorderSide(
+              color: AppColors.error.withOpacity(0.15)),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            lang.t('⚠️  Driving detected — Phone silenced',
-                   '⚠️  Conduite détectée — Téléphone silencieux'),
-            style: AppText.bodyBold(color: AppColors.onSurface, size: 13),
+      child: Row(children: [
+        const Icon(Icons.volume_off_rounded,
+            color: AppColors.error, size: 18),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            lang.t(
+              'Phone silenced — Drive safely!',
+              'Téléphone silencieux — Conduisez prudemment!',
+            ),
+            style:
+                AppText.bodyBold(color: AppColors.onSurface, size: 13),
           ),
-          const SizedBox(height: 3),
-          Text(
-            lang.t('Volume will be restored automatically when you stop.',
-                   'Le son sera restauré automatiquement à l\'arrêt.'),
-            style: AppText.body(size: 12),
-          ),
-        ],
-      ),
+        ),
+      ]),
     );
   }
 }
 
-// ── Action button ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// ACTION BUTTON
+// ── FIX: removed Border(top:...) that caused the yellow line
+// ── FIX: uses AppShellState (public) not _AppShellState (private)
+// ─────────────────────────────────────────────────────────────────────────────
 class _ActionButton extends StatelessWidget {
   final DrivingViewModel vm;
   final LanguageViewModel lang;
@@ -478,34 +528,58 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isOn = vm.isMonitoring;
-    final c1 = isOn ? AppColors.error : AppColors.primary;
-    final c2 = isOn ? AppColors.errorContainer : AppColors.primaryContainer;
+    final c1   = isOn ? AppColors.error          : AppColors.primary;
+    final c2   = isOn ? AppColors.errorContainer : AppColors.primaryContainer;
 
     return GestureDetector(
-      onTap: () => isOn ? vm.stopMonitoring() : vm.startMonitoring(),
-      child: Container(
+      onTap: () async {
+        if (isOn) {
+          await vm.stopMonitoring();
+          if (context.mounted) {
+            // ✅ FIX: AppShellState is public in main.dart
+            context
+                .findAncestorStateOfType<AppShellState>()
+                ?.switchToHistory();
+          }
+        } else {
+          await vm.startMonitoring();
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
         width: double.infinity,
-        height: 58,
+        height: 60,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(32),
           gradient: LinearGradient(
-            begin: Alignment.topLeft, end: Alignment.bottomRight,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [c1, c2],
           ),
           boxShadow: [
-            BoxShadow(color: c1.withOpacity(0.35), blurRadius: 20, offset: const Offset(0, 6)),
+            BoxShadow(
+              color: c1.withOpacity(0.40),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
           ],
-          border: Border(top: BorderSide(color: Colors.white.withOpacity(0.15))),
+          // ✅ FIX: removed Border(top:...) — that was the yellow line
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(isOn ? Icons.stop_circle_outlined : Icons.play_circle_outline_rounded,
-                color: Colors.white, size: 22),
+            Icon(
+              isOn
+                  ? Icons.stop_circle_outlined
+                  : Icons.play_circle_outline_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
             const SizedBox(width: 10),
             Text(
-              isOn ? lang.t('STOP MONITORING',  'ARRÊTER LA SURVEILLANCE')
-                   : lang.t('START MONITORING', 'DÉMARRER LA SURVEILLANCE'),
+              isOn
+                  ? lang.t('STOP MONITORING', 'ARRÊTER LA SURVEILLANCE')
+                  : lang.t('START MONITORING', 'DÉMARRER LA SURVEILLANCE'),
               style: AppText.label(color: Colors.white, size: 13),
             ),
           ],
@@ -515,50 +589,30 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-// ── Ping dot widget ───────────────────────────────────────────────────────────
-class _PingDot extends StatefulWidget {
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+class _GlowBlob extends StatelessWidget {
   final Color color;
-  final bool animate;
-  const _PingDot({required this.color, required this.animate});
+  final double r, o;
+  const _GlowBlob({required this.color, required this.r, required this.o});
+
   @override
-  State<_PingDot> createState() => _PingDotState();
+  Widget build(BuildContext context) => Container(
+    width: r * 2, height: r * 2,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      boxShadow: [
+        BoxShadow(
+          color: color.withOpacity(o),
+          blurRadius: r * 1.6,
+          spreadRadius: r * 0.25,
+        ),
+      ],
+    ),
+  );
 }
 
-class _PingDotState extends State<_PingDot> with SingleTickerProviderStateMixin {
-  late final AnimationController _c;
-  late final Animation<double> _a;
-  @override
-  void initState() {
-    super.initState();
-    _c = AnimationController(vsync: this, duration: const Duration(seconds: 1))..repeat();
-    _a = Tween<double>(begin: 0, end: 1).animate(_c);
-  }
-  @override
-  void dispose() { _c.dispose(); super.dispose(); }
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(width: 12, height: 12,
-      child: Stack(alignment: Alignment.center, children: [
-        if (widget.animate)
-          AnimatedBuilder(animation: _a, builder: (_, __) =>
-            Transform.scale(scale: 1 + _a.value * 0.8,
-              child: Container(
-                width: 10, height: 10,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: widget.color.withOpacity(0.4 * (1 - _a.value)),
-                ),
-              ),
-            ),
-          ),
-        Container(width: 7, height: 7,
-          decoration: BoxDecoration(shape: BoxShape.circle, color: widget.color)),
-      ]),
-    );
-  }
-}
-
-// ── Dashed ring painter ───────────────────────────────────────────────────────
 class _DashedRingPainter extends CustomPainter {
   final Color color;
   const _DashedRingPainter({required this.color});
@@ -566,23 +620,24 @@ class _DashedRingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color
+      ..color      = color
       ..strokeWidth = 2
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+      ..style      = PaintingStyle.stroke
+      ..strokeCap  = StrokeCap.round;
 
-    const dashCount = 24;
-    const dashLength = math.pi * 2 / dashCount * 0.55;
-    const gapLength  = math.pi * 2 / dashCount * 0.45;
-    final radius = size.width / 2;
-    final center = Offset(size.width / 2, size.height / 2);
-    double angle = 0;
-    for (int i = 0; i < dashCount; i++) {
+    const segments  = 28;
+    const dashAngle = math.pi * 2 / segments * 0.58;
+    const gapAngle  = math.pi * 2 / segments * 0.42;
+    final radius    = size.width / 2;
+    final center    = Offset(radius, radius);
+    double angle    = 0;
+
+    for (int i = 0; i < segments; i++) {
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),
-        angle, dashLength, false, paint,
+        angle, dashAngle, false, paint,
       );
-      angle += dashLength + gapLength;
+      angle += dashAngle + gapAngle;
     }
   }
 
