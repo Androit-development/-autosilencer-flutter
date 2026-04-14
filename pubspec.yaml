@@ -39,13 +39,14 @@ dependencies:
   noise_meter: ^5.0.2
 
   # Connects to Supabase database
-  supabase_flutter: ^2.8.4
+  supabase_flutter: ^2.12.2
 
   # Manages app state (ViewModel pattern)
   provider: ^6.1.5
 
   # Handles phone permissions (microphone, etc.)
   permission_handler: ^11.3.1
+  google_sign_in: ^7.2.0
 
 dev_dependencies:
   flutter_test:
