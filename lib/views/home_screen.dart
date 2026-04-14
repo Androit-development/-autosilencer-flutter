@@ -5,6 +5,7 @@ import '../main.dart';
 import '../viewmodels/driving_viewmodel.dart';
 import '../viewmodels/language_viewmodel.dart';
 import '../services/permissions_service.dart';
+import '../services/background_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -199,10 +200,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
                     const SizedBox(height: 8),
                     Text(
-                      lang.t(
-                        'Tap to activate automatic detection',
-                        'Appuyez pour activer la détection automatique',
-                      ),
+                      vm.isMonitoring
+                          ? lang.t(
+                              'Live monitoring active',
+                              'Surveillance en direct active',
+                            )
+                          : lang.t(
+                              'Driving is auto-detected · Tap for live view',
+                              'Conduite auto-détectée · Appuyez pour le suivi en direct',
+                            ),
                       style: AppText.body(size: 11),
                       textAlign: TextAlign.center,
                     ),
@@ -395,15 +401,6 @@ class _TopBar extends StatelessWidget {
                       AppText.label(color: AppColors.primary, size: 11)),
             ),
           ),
-
-          const SizedBox(width: 10),
-
-          // Settings icon → navigate to settings screen
-          GestureDetector(
-            onTap: () => Navigator.pushNamed(context, '/settings'),
-            child: Icon(Icons.settings_outlined,
-                color: AppColors.onSurfaceVariant, size: 22),
-          ),
         ],
       ),
     );
@@ -536,6 +533,7 @@ class _ActionButton extends StatelessWidget {
       onTap: () async {
         if (isOn) {
           await vm.stopMonitoring();
+          await BackgroundServiceManager.stopService();
           if (context.mounted) {
             // ✅ FIX: AppShellState is public in main.dart
             context
@@ -556,8 +554,9 @@ class _ActionButton extends StatelessWidget {
             return;
           }
 
-          // All permissions granted, start monitoring
+          // All permissions granted, start monitoring + background service
           await vm.startMonitoring();
+          await BackgroundServiceManager.startService();
         }
       },
       child: AnimatedContainer(

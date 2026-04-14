@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../main.dart';
 import '../viewmodels/language_viewmodel.dart';
 import '../viewmodels/driving_viewmodel.dart';
+import '../services/background_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -35,14 +37,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 // ── App bar ───────────────────────────────────────────────
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
                   child: Row(
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_rounded,
-                            color: AppColors.onSurface),
-                        onPressed: () => Navigator.pop(context),
-                      ),
+                      Icon(Icons.settings_rounded, color: AppColors.primary, size: 22),
+                      const SizedBox(width: 10),
                       Text(lang.t('Settings', 'Réglages'),
                           style: AppText.headline(size: 20)),
                       const Spacer(),
@@ -258,11 +257,134 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
 
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 24),
+
+                      // ── Logout ─────────────────────────────────────────────
+                      _SectionLabel(lang.t('ACCOUNT', 'COMPTE')),
+                      const SizedBox(height: 10),
+                      GestureDetector(
+                        onTap: () => _showLogoutDialog(context, lang),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withOpacity(0.06),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: AppColors.error.withOpacity(0.2),
+                            ),
+                          ),
+                          child: Row(children: [
+                            Container(
+                              width: 40, height: 40,
+                              decoration: BoxDecoration(
+                                color: AppColors.error.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.logout_rounded,
+                                  color: AppColors.error, size: 20),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    lang.t('Log Out', 'Déconnexion'),
+                                    style: AppText.bodyBold(
+                                        color: AppColors.error, size: 15),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    lang.t(
+                                      'Sign out of your account',
+                                      'Se déconnecter de votre compte',
+                                    ),
+                                    style: AppText.body(size: 12),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(Icons.chevron_right_rounded,
+                                color: AppColors.error.withOpacity(0.6),
+                                size: 22),
+                          ]),
+                        ),
+                      ),
+
+                      const SizedBox(height: 40),
                     ],
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Logout confirmation dialog ──────────────────────────────────────
+  void _showLogoutDialog(BuildContext context, LanguageViewModel lang) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.bgCardHighest,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Row(children: [
+          Icon(Icons.logout_rounded, color: AppColors.error, size: 22),
+          const SizedBox(width: 10),
+          Text(
+            lang.t('Log Out?', 'Se déconnecter?'),
+            style: AppText.headline(size: 18),
+          ),
+        ]),
+        content: Text(
+          lang.t(
+            'You will be signed out of your account. '
+            'Background driving detection will be stopped.',
+            'Vous serez déconnecté de votre compte. '
+            'La détection de conduite en arrière-plan sera arrêtée.',
+          ),
+          style: AppText.body(size: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              lang.t('Cancel', 'Annuler'),
+              style: AppText.bodyBold(
+                  color: AppColors.onSurfaceVariant, size: 14),
+            ),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx); // close dialog
+
+              // Stop monitoring & background service
+              context.read<DrivingViewModel>().stopMonitoring();
+              await BackgroundServiceManager.stopService();
+
+              // Sign out from Supabase
+              await Supabase.instance.client.auth.signOut();
+
+              if (context.mounted) {
+                // Navigate back to splash screen and clear nav stack
+                Navigator.pushNamedAndRemoveUntil(
+                  context, '/splash', (_) => false,
+                );
+              }
+            },
+            child: Text(
+              lang.t('Log Out', 'Déconnexion'),
+              style: AppText.bodyBold(color: Colors.white, size: 14),
             ),
           ),
         ],

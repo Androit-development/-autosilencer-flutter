@@ -59,6 +59,32 @@ class DrivingViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ── Called from background service data callback ──────────────────
+  // Updates UI state to reflect what the background service detects,
+  // even when the user hasn't pressed "Start Monitoring".
+  void updateFromBackground({
+    required bool isDriving,
+    required double motion,
+    required double noise,
+  }) {
+    final changed = _isDriving != isDriving ||
+        (_motion - motion).abs() > 0.1 ||
+        (_noise - noise).abs() > 1.0;
+
+    _isDriving = isDriving;
+    _motion    = motion;
+    _noise     = noise;
+
+    // Mark as monitoring so the UI shows live sensor data
+    if (!_isMonitoring && isDriving) {
+      _isMonitoring = true;
+    }
+
+    if (changed) {
+      notifyListeners();
+    }
+  }
+
   // ── START monitoring with REAL sensors ───────────────────────────
   Future<void> startMonitoring() async {
     if (_isMonitoring) return; // prevent double start

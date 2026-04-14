@@ -8,10 +8,13 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'viewmodels/driving_viewmodel.dart';
 import 'viewmodels/language_viewmodel.dart';
+import 'services/background_service.dart';
 import 'views/splash_screen.dart';
 import 'views/home_screen.dart';
 import 'views/history_screen.dart';
 import 'views/settings_screen.dart';
+import 'viewmodels/driver_mode_viewmodel.dart';
+
 
 // ── Colors ────────────────────────────────────────────────────────────
 class AppColors {
@@ -81,15 +84,52 @@ Future<void> main() async {
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
   ));
+
+  // Initialize background service for passive driving detection
+  BackgroundServiceManager.initialize();
+
+  final drivingVM = DrivingViewModel()..loadSampleLogs();
+
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => DrivingViewModel()..loadSampleLogs()),
+        ChangeNotifierProvider(create: (_) => drivingVM),
         ChangeNotifierProvider(create: (_) => LanguageViewModel()),
+        ChangeNotifierProvider(create: (_) => DriverModeViewModel()),
       ],
       child: const AutoSilencerApp(),
     ),
   );
+
+  // Auto-start ONLY the background service — it passively monitors
+  // sensors and silences the phone when driving is detected.
+  // The UI "Start Monitoring" button is separate (for visual feedback).
+  _startBackgroundDetection(drivingVM);
+}
+
+/// Start the background service that passively detects driving
+/// and silences the phone automatically. Also hooks up data
+/// callbacks so the UI stays in sync with background detections.
+Future<void> _startBackgroundDetection(DrivingViewModel vm) async {
+  // Small delay to let permissions settle after splash screen
+  await Future.delayed(const Duration(seconds: 2));
+  await BackgroundServiceManager.startService();
+
+  // Listen for background service data so the UI reflects driving state
+  BackgroundServiceManager.addDataListener((data) {
+    if (data is Map) {
+      final isDriving = data['isDriving'] as bool? ?? false;
+      final motion    = (data['motion'] as num?)?.toDouble() ?? 0.0;
+      final noise     = (data['noise']  as num?)?.toDouble() ?? 0.0;
+      vm.updateFromBackground(
+        isDriving: isDriving,
+        motion: motion,
+        noise: noise,
+      );
+    }
+  });
+
+  debugPrint('🚀 Background driving detection started');
 }
 
 class AutoSilencerApp extends StatelessWidget {
@@ -117,19 +157,25 @@ class AutoSilencerApp extends StatelessWidget {
           surface: AppColors.bgCardHigh,
           error: AppColors.error,
         ),
+        // Smooth page transitions throughout the app
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          },
+        ),
       ),
       initialRoute: '/splash',
       routes: {
-        '/splash':   (_) => const SplashScreen(),
-        '/home':     (_) => const AppShell(),
-        '/settings': (_) => const SettingsScreen(),
+        '/splash': (_) => const SplashScreen(),
+        '/home':   (_) => const AppShell(),
       },
     );
   }
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// AppShell — exposes switchToHistory() so HomeScreen can call it
+// AppShell — smooth tab navigation between Home, History, Settings
 // ══════════════════════════════════════════════════════════════════════
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -148,24 +194,46 @@ class AppShellState extends State<AppShell> {
     context.read<DrivingViewModel>().loadLogs();
   }
 
-  final List<Widget> _screens = const [HomeScreen(), HistoryScreen()];
+  // All three screens live inside the IndexedStack for smooth switching
+  final List<Widget> _screens = const [
+    HomeScreen(),
+    HistoryScreen(),
+    SettingsScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageViewModel>();
     return Scaffold(
       backgroundColor: AppColors.bgLowest,
-      body: IndexedStack(index: _idx, children: _screens),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 350),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.03, 0),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        ),
+        child: KeyedSubtree(
+          key: ValueKey(_idx),
+          child: _screens[_idx],
+        ),
+      ),
       bottomNavigationBar: _BottomNav(
-        idx:        _idx,
-        onTap:      (i) {
+        idx: _idx,
+        onTap: (i) {
           setState(() => _idx = i);
           if (i == 1) context.read<DrivingViewModel>().loadLogs();
         },
         homeLabel:     lang.t('HOME',     'HOME'),
         historyLabel:  lang.t('HISTORY',  'HISTORIQUE'),
         settingsLabel: lang.t('SETTINGS', 'RÉGLAGES'),
-        onSettings:    () => Navigator.pushNamed(context, '/settings'),
       ),
     );
   }
@@ -175,10 +243,9 @@ class _BottomNav extends StatelessWidget {
   final int idx;
   final Function(int) onTap;
   final String homeLabel, historyLabel, settingsLabel;
-  final VoidCallback onSettings;
   const _BottomNav({required this.idx, required this.onTap,
     required this.homeLabel, required this.historyLabel,
-    required this.settingsLabel, required this.onSettings});
+    required this.settingsLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -195,8 +262,8 @@ class _BottomNav extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _Btn(icon: Icons.home_rounded,      label: homeLabel,     sel: idx==0, onTap: ()=>onTap(0)),
-          _Btn(icon: Icons.history_rounded,   label: historyLabel,  sel: idx==1, onTap: ()=>onTap(1)),
-          _Btn(icon: Icons.settings_outlined, label: settingsLabel, sel: false,  onTap: onSettings),
+          _Btn(icon: Icons.history_rounded,    label: historyLabel,  sel: idx==1, onTap: ()=>onTap(1)),
+          _Btn(icon: Icons.settings_outlined,  label: settingsLabel, sel: idx==2, onTap: ()=>onTap(2)),
         ],
       ),
     );
@@ -224,4 +291,4 @@ class _Btn extends StatelessWidget {
       ]),
     ),
   );
-}
+}
