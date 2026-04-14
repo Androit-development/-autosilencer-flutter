@@ -8,7 +8,6 @@
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
 [![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.io)
 [![Android](https://img.shields.io/badge/Android-API%2027+-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com)
-[![Driver Mode](https://img.shields.io/badge/Driver%20Mode-Yango%20Ready-FFB300?style=for-the-badge)]()
 
 <br/>
 
