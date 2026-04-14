@@ -261,7 +261,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                       // ── Filter chips ───────────────────────────────────
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -499,7 +499,7 @@ class _SessionCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             log.appName,
-                            style: AppText.caption(color: AppColors.onSurfaceVariant),
+                            style: AppText.body(size: 12, color: AppColors.onSurfaceVariant),
                           ),
                         ],
                       ),
@@ -526,8 +526,6 @@ class _SessionCard extends StatelessWidget {
               const SizedBox(height: 12),
 
               // ✅ FIX: Progress bar with NO yellow line
-              // Used Stack instead of LinearProgressIndicator
-              // LinearProgressIndicator had a yellow theme color bleed
               Row(children: [
                 Expanded(
                   child: Stack(children: [
