@@ -8,7 +8,7 @@
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
 [![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.io)
 [![Android](https://img.shields.io/badge/Android-API%2027+-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com)
-[![Sprint](https://img.shields.io/badge/Sprint%201-Complete-00E676?style=for-the-badge)]()
+[![Driver Mode](https://img.shields.io/badge/Driver%20Mode-Yango%20Ready-FFB300?style=for-the-badge)]()
 
 <br/>
 
@@ -23,13 +23,15 @@
 
 ## 📖 Table of Contents
 
-- [The Problem](#-the-problem--a-crisis-hiding-in-plain-sight)
-- [The Solution](#-the-solution--autosilencer)
+- [The Problem](#-the-problem)
+- [The Solution](#-the-solution)
 - [What Makes It Innovative](#-what-makes-it-innovative)
+- [Real User Feedback](#-real-user-feedback--driver-mode-origin)
 - [System Architecture](#-system-architecture)
-- [Data Flow](#-data-flow--from-sensor-to-silence)
+- [Data Flow](#-data-flow)
 - [Project Structure](#-project-structure)
 - [Features](#-features)
+- [Driver Mode](#-driver-mode--for-yango--professional-drivers)
 - [Tech Stack](#-tech-stack)
 - [Database Schema](#-database-schema)
 - [Sprint Plan](#-agile-sprint-plan)
@@ -38,7 +40,7 @@
 
 ---
 
-## 🌍 The Problem — A Crisis Hiding in Plain Sight
+## 🌍 The Problem
 
 <table>
 <tr>
@@ -84,7 +86,7 @@ Existing solutions require you to:
 
 ---
 
-## 💡 The Solution — AutoSilencer
+## 💡 The Solution
 
 <div align="center">
 
@@ -105,7 +107,7 @@ Existing solutions require you to:
 
 </div>
 
-**AutoSilencer** is a native Android application built with Flutter that uses the phone's **accelerometer** and **microphone** — no GPS, no internet required for core detection — to automatically determine when you are driving and silence your phone instantly. When your journey ends, it restores your volume. Every session is logged to a Supabase cloud database so you can track your safe driving history.
+**AutoSilencer** is a native Android application built with Flutter that uses the phone's **accelerometer** and **microphone** — no GPS, no internet required for core detection — to automatically determine when you are driving and silence the phone instantly. When the journey ends, it restores the volume. Every session is logged to a Supabase cloud database.
 
 ---
 
@@ -116,22 +118,39 @@ Existing solutions require you to:
 <td align="center" width="33%">
 
 ### 📡 Dual-Sensor Intelligence
-
-Most solutions rely on GPS alone. We combine **accelerometer motion analysis** with **ambient noise measurement** — a two-factor detection system that is both more accurate and far more battery-efficient. No satellite lock needed.
+Most solutions rely on GPS alone. We combine **accelerometer motion analysis** with **ambient noise measurement** — a two-factor detection system that is more accurate and far more battery-efficient. No satellite lock needed.
 
 </td>
 <td align="center" width="33%">
 
 ### 🔒 Privacy by Design
-
 We **never record audio**. The microphone measures only the ambient noise *level* — a single decimal number in decibels. No audio file is ever created, stored, or transmitted. Your conversations stay private, always.
 
 </td>
 <td align="center" width="33%">
 
 ### 🇨🇲 Local Context First
+Built for the Cameroonian driver. Fully bilingual in **English and French**. Designed to silence MTN MoMo, Orange Money, and WhatsApp — the exact notifications that distract us most on Cameroonian roads.
 
-Built for the Cameroonian driver. Fully bilingual in **English and French** with a single tap. Designed to silence MTN MoMo, Orange Money, and WhatsApp — the exact notifications that distract us most on Cameroonian roads.
+</td>
+</tr>
+<tr>
+<td align="center" width="33%">
+
+### 🚖 Driver Mode
+Real Yango and inDrive drivers need their order notifications. **Driver Mode** whitelists specific apps so ride-hailing alerts still come through while everything else is silenced. Built from real user feedback.
+
+</td>
+<td align="center" width="33%">
+
+### 🟢 Availability Status
+Professional drivers can set their status to **Available**, **Busy**, or **Offline** — just like WhatsApp status — directly from the app. Inspired by real feedback from a Yango driver in Yaoundé.
+
+</td>
+<td align="center" width="33%">
+
+### ☁️ Cloud History
+Every driving session is automatically saved to **Supabase PostgreSQL**. Users can review their full driving history filtered by today, this week, or all time — with analytics showing total trips, time, and silences.
 
 </td>
 </tr>
@@ -139,142 +158,146 @@ Built for the Cameroonian driver. Fully bilingual in **English and French** with
 
 ---
 
+## 💬 Real User Feedback — Driver Mode Origin
+
+> *"Bon, tu pourrais mettre une fonction comme pour WhatsApp qui met occupé et disponible... Pour ceux qui font le Yango, ils ont besoin d'être actifs, ils ont besoin d'avoir leur téléphone. Yango, absolument le seul truc qui doit être allumé, qui doit être actif, donc le reste ne peut pas donner."*
+>
+> — **Real Yango driver, Yaoundé, Cameroon** — first external user test session
+
+This direct feedback from a professional driver led to the development of **Driver Mode**, which allows Yango, inDrive, Uber Driver, and navigation apps to bypass silence so professional drivers never miss an order while AutoSilencer keeps them safe.
+
+---
+
 ## 🏛️ System Architecture
 
-### MVVM — The Three Layers
+### MVVM — The Four Layers
 
 ```
-╔═══════════════════════════════════════════════════════════════════════════╗
-║                         AUTOSILENCER APP                                  ║
-║                  MVVM (Model — View — ViewModel)                          ║
-╠═══════════════════════════════════════════════════════════════════════════╣
-║                                                                            ║
-║  ╔═══════════════════════════════════════════════════════════════════╗    ║
-║  ║                        VIEW  LAYER                                ║    ║
-║  ║              "What the user sees and touches"                     ║    ║
-║  ║                                                                   ║    ║
-║  ║  ┌────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────┐  ║    ║
-║  ║  │   Splash   │  │    Home     │  │   History   │  │Settings │  ║    ║
-║  ║  │  Module 1  │  │  Module 2   │  │  Module 3   │  │Module 4 │  ║    ║
-║  ║  │            │  │             │  │             │  │         │  ║    ║
-║  ║  │ Particles  │  │ Status Rings│  │Session Cards│  │ EN / FR │  ║    ║
-║  ║  │ Shield logo│  │ Sensor stats│  │Filter chips │  │Switcher │  ║    ║
-║  ║  │ CTA button │  │ Start/Stop  │  │Summary pills│  │         │  ║    ║
-║  ║  └─────┬──────┘  └──────┬──────┘  └──────┬──────┘  └────┬────┘  ║    ║
-║  ╚════════╪═══════════════╪════════════════╪═══════════════╪════════╝    ║
-║           │    observes & reacts to ViewModel state        │              ║
-║  ╔════════▼═══════════════▼════════════════▼═══════════════▼════════╗    ║
-║  ║                     VIEWMODEL  LAYER                              ║    ║
-║  ║            "The brain — bridges UI and data"                     ║    ║
-║  ║                                                                   ║    ║
-║  ║  ┌───────────────────────────────────┐  ┌─────────────────────┐  ║    ║
-║  ║  │        DrivingViewModel           │  │   LanguageViewModel  │  ║    ║
-║  ║  │            Module 5               │  │       Module 6       │  ║    ║
-║  ║  │                                   │  │                      │  ║    ║
-║  ║  │  State:                           │  │  locale: Locale      │  ║    ║
-║  ║  │    isMonitoring: bool             │  │  isEnglish: bool     │  ║    ║
-║  ║  │    isDriving: bool                │  │  toggle() method     │  ║    ║
-║  ║  │    motionLevel: double            │  │                      │  ║    ║
-║  ║  │    noiseLevel: double             │  │  → Rebuilds entire   │  ║    ║
-║  ║  │    logs: List<DrivingLog>         │  │    app on change     │  ║    ║
-║  ║  │                                   │  └─────────────────────┘  ║    ║
-║  ║  │  Actions:                         │                            ║    ║
-║  ║  │    startMonitoring()              │                            ║    ║
-║  ║  │    stopMonitoring()               │                            ║    ║
-║  ║  │    updateSensorData(motion, noise)│                            ║    ║
-║  ║  └─────────────────┬─────────────────┘                            ║    ║
-║  ╚═══════════════════╪══════════════════════════════════════════════╝    ║
-║                       │  reads from / writes to                           ║
-║  ╔════════════════════▼══════════════════════════════════════════════╗    ║
-║  ║                      MODEL  LAYER                                 ║    ║
-║  ║                "Data sources and business logic"                  ║    ║
-║  ║                                                                   ║    ║
-║  ║  ┌──────────────┐  ┌──────────────────┐  ┌──────────────────┐   ║    ║
-║  ║  │SensorManager │  │ DrivingDetector  │  │ SupabaseService  │   ║    ║
-║  ║  │   Module 9   │  │    Module 8      │  │    Module 10     │   ║    ║
-║  ║  │              │  │                  │  │                  │   ║    ║
-║  ║  │Accelerometer │  │ magnitude =      │  │ INSERT log row   │   ║    ║
-║  ║  │stream (1/sec)│  │  √(x²+y²+z²)    │  │ SELECT history   │   ║    ║
-║  ║  │              │  │                  │  │ Real-time sync   │   ║    ║
-║  ║  │Microphone dB │  │ IF motion > 1.5  │  │                  │   ║    ║
-║  ║  │stream (1/sec)│  │ AND noise > 60dB │  └────────┬─────────┘   ║    ║
-║  ║  └──────┬───────┘  │ → DRIVING ✅     │           │             ║    ║
-║  ║         │          └────────┬─────────┘           │             ║    ║
-║  ╚═════════╪═══════════════════╪═════════════════════╪═════════════╝    ║
-╚════════════╪═══════════════════╪═════════════════════╪══════════════════╝
-             │                   │                     │
-   ┌──────────▼────────┐  ┌──────▼──────────┐  ┌──────▼──────────────┐
-   │  📱 Phone Hardware │  │ 🔇 Android DND  │  │  ☁️ Supabase Cloud  │
-   │  Accelerometer     │  │  Silent Mode    │  │  PostgreSQL Database │
-   │  Microphone        │  │  Volume Control │  │  REST API           │
-   └────────────────────┘  └─────────────────┘  └─────────────────────┘
+╔═════════════════════════════════════════════════════════════════════════╗
+║                         AUTOSILENCER APP                                ║
+║                  MVVM (Model — View — ViewModel)                        ║
+╠═════════════════════════════════════════════════════════════════════════╣
+║                                                                          ║
+║  ╔═══════════════════════════════════════════════════════════════════╗  ║
+║  ║                        VIEW  LAYER                                ║  ║
+║  ║                 "What the user sees and touches"                  ║  ║
+║  ║                                                                   ║  ║
+║  ║  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌──────────┐  ║  ║
+║  ║  │ Splash  │ │  Home   │ │ History │ │Settings │ │  Driver  │  ║  ║
+║  ║  │Module 1 │ │Module 2 │ │Module 3 │ │Module 4 │ │   Mode   │  ║  ║
+║  ║  │Particles│ │ Rings   │ │ Cards   │ │ EN/FR   │ │ Module 5 │  ║  ║
+║  ║  │ Shield  │ │ Sensors │ │ Filter  │ │Sliders  │ │ Yango    │  ║  ║
+║  ║  │   CTA   │ │ Start   │ │Analytics│ │  About  │ │ Status   │  ║  ║
+║  ║  └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘ └────┬─────┘  ║  ║
+║  ╚═══════╪══════════╪════════════╪════════════╪═══════════╪═════════╝  ║
+║          │       observes & reacts to ViewModel state     │             ║
+║  ╔═══════▼══════════▼════════════▼════════════▼═══════════▼═════════╗  ║
+║  ║                       VIEWMODEL  LAYER                            ║  ║
+║  ║              "The brain — bridges UI and data"                   ║  ║
+║  ║                                                                   ║  ║
+║  ║  ┌──────────────────────┐  ┌──────────────┐  ┌───────────────┐  ║  ║
+║  ║  │   DrivingViewModel   │  │LanguageVM    │  │DriverModeVM   │  ║  ║
+║  ║  │      Module 6        │  │  Module 7    │  │   Module 8    │  ║  ║
+║  ║  │                      │  │              │  │               │  ║  ║
+║  ║  │ isMonitoring: bool   │  │locale: Locale│  │isDriverMode   │  ║  ║
+║  ║  │ isDriving: bool      │  │isEnglish:bool│  │status: enum   │  ║  ║
+║  ║  │ motionLevel: double  │  │toggle()      │  │whitelistedApps│  ║  ║
+║  ║  │ noiseLevel: double   │  │              │  │toggleApp()    │  ║  ║
+║  ║  │ logs: List<DrivingLog│  └──────────────┘  └───────────────┘  ║  ║
+║  ║  │ startMonitoring()    │                                        ║  ║
+║  ║  │ stopMonitoring()     │                                        ║  ║
+║  ║  │ loadLogs()           │                                        ║  ║
+║  ║  └──────────┬───────────┘                                        ║  ║
+║  ╚═════════════╪══════════════════════════════════════════════════════╝ ║
+║                │  reads from / writes to                                ║
+║  ╔═════════════▼══════════════════════════════════════════════════════╗ ║
+║  ║                        MODEL  LAYER                                ║ ║
+║  ║                "Data sources and business logic"                   ║ ║
+║  ║                                                                    ║ ║
+║  ║  ┌──────────────┐  ┌─────────────────┐  ┌───────────────────┐   ║ ║
+║  ║  │SensorManager │  │ DrivingDetector │  │  SupabaseService  │   ║ ║
+║  ║  │   Module 9   │  │   Module 10     │  │    Module 11      │   ║ ║
+║  ║  │              │  │                 │  │                   │   ║ ║
+║  ║  │Accelerometer │  │ √(x²+y²+z²)    │  │ INSERT logs       │   ║ ║
+║  ║  │  500ms stream│  │ -gravity = net  │  │ SELECT history    │   ║ ║
+║  ║  │Microphone dB │  │ motion>1.5 AND  │  │ RLS per user      │   ║ ║
+║  ║  │  continuous  │  │ noise>60 →      │  │ Auth integration  │   ║ ║
+║  ║  └──────┬───────┘  │ DRIVING ✅      │  └─────────┬─────────┘   ║ ║
+║  ║         │          └─────────────────┘            │             ║ ║
+║  ╚═════════╪═══════════════════════════════════════╪══════════════╝ ║
+╚════════════╪═══════════════════════════════════════╪════════════════╝
+             │                                       │
+   ┌──────────▼──────────┐               ┌───────────▼───────────────┐
+   │   📱 Android Hardware│               │   ☁️ Supabase Cloud       │
+   │   Accelerometer      │               │   PostgreSQL Database     │
+   │   Microphone         │               │   REST API + Auth         │
+   │   DND API (silent)   │               │   Row Level Security      │
+   └─────────────────────┘               └───────────────────────────┘
 ```
 
 ---
 
-## 🌊 Data Flow — From Sensor to Silence
+## 🌊 Data Flow
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         DETECTION PIPELINE                               │
-└─────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                        DETECTION PIPELINE                            │
+└─────────────────────────────────────────────────────────────────────┘
 
-  [USER ENTERS CAR]
-         │
-         ▼
-  ┌──────────────────────┐    every 1 second
-  │   SensorManager      │ ──────────────────────────────────────────────┐
-  │                      │                                                │
-  │  Accelerometer  ───→ │  x: 0.12, y: 9.81, z: 2.30  (raw m/s²)      │
-  │  Microphone     ───→ │  noise: 68.4 dB                               │
-  └──────────────────────┘                                                │
-                                                                          │
-         ┌────────────────────────────────────────────────────────────────┘
-         │
-         ▼
-  ┌──────────────────────────────────────────────────────────────────────┐
-  │                      DrivingDetector Algorithm                        │
-  │                                                                        │
-  │   Step 1:  magnitude  = √(0.12² + 9.81² + 2.30²)  =  10.07 m/s²    │
-  │   Step 2:  netMotion  = |10.07 - 9.8|              =   0.27 m/s²    │
-  │                          (subtract gravity)                            │
-  │                                                                        │
-  │   Step 3:  netMotion (0.27) > threshold (1.5)?      → NO             │
-  │            noiseLevel (68.4) > threshold (60.0)?    → YES            │
-  │                                                                        │
-  │            BOTH must be true → Result: NOT DRIVING 🟢                │
-  │            (prevents false positive from bumpy road or loud room)     │
-  └──────────────────────────────────────────────────────────────────────┘
-         │
-         ▼
-  ┌──────────────────────┐
-  │   Status Changed?    │
-  └────┬─────────────────┘
-      YES ──────────────────────────────────────────────────────────────┐
-       │                                                                  │
-       ▼                                                                  ▼
-  [DRIVING → Silent ON]                                      [STOPPED → Volume ON]
-       │                                                                  │
-       └──────────────────────┬───────────────────────────────────────────┘
-                              │
-                              ▼
-                   ┌──────────────────────────────┐
-                   │     Log saved to Supabase     │
-                   │  {                            │
-                   │    status: "DRIVING",         │
-                   │    timestamp: now(),          │
-                   │    motion: 2.4,               │
-                   │    noise: 68.4                │
-                   │  }                            │
-                   └──────────────────────────────┘
-                              │
-                              ▼
-                   ┌──────────────────────────────┐
-                   │  UI rebuilds via Provider     │
-                   │  → Red rings animate          │
-                   │  → Alert banner appears       │
-                   │  → Stats update live          │
-                   └──────────────────────────────┘
+  [USER TAPS START]
+        │
+        ▼
+  ┌─────────────────────────────────────┐
+  │   SensorManager — reads every 500ms  │
+  │   Accelerometer → x, y, z values    │
+  │   Microphone    → dB level           │
+  └─────────────────────┬───────────────┘
+                        │ check every 1 second
+                        ▼
+  ┌──────────────────────────────────────────────────────────┐
+  │               DrivingDetector Algorithm                   │
+  │                                                           │
+  │   magnitude = √(x² + y² + z²)                           │
+  │   netMotion = |magnitude − 9.8|   ← subtract gravity    │
+  │                                                           │
+  │   IF netMotion > threshold (default: 1.5 m/s²)          │
+  │   AND noiseLevel > threshold (default: 60 dB)           │
+  │        → DRIVING DETECTED ✅                             │
+  │   ELSE → NOT DRIVING 🟢                                 │
+  │                                                           │
+  │   Both thresholds adjustable in Settings screen sliders  │
+  └────────────────────┬────────────────────────────────────┘
+                       │ status changed?
+                       ▼
+         ┌─────────────────────────────────┐
+         │        Driver Mode check         │
+         │                                  │
+         │  Normal → Silence EVERYTHING     │
+         │  Driver → Silence ALL except:    │
+         │    ✅ Yango (if enabled)         │
+         │    ✅ inDrive (if enabled)       │
+         │    ✅ Phone calls (always)       │
+         │    ✅ Google Maps (always)       │
+         └──────────────┬──────────────────┘
+                        │
+                        ▼
+             ┌──────────────────────────┐
+             │   Log saved to Supabase   │
+             │   {                       │
+             │     user_id,              │
+             │     status: "DRIVING",    │
+             │     motion: 2.4,          │
+             │     noise: 68.4           │
+             │   }                       │
+             └──────────────────────────┘
+                        │
+                        ▼
+             ┌──────────────────────────┐
+             │  UI rebuilds via Provider │
+             │  Red rings animate        │
+             │  Alert banner appears     │
+             │  Stats update live        │
+             └──────────────────────────┘
 ```
 
 ---
@@ -284,30 +307,32 @@ Built for the Cameroonian driver. Fully bilingual in **English and French** with
 ```
 driving_auto_silencer/
 │
-├── 📄 main.dart                     ← App entry + routes + MultiProvider
-├── 🎨 app_theme.dart                ← "Sentinel Glow" design tokens
+├── 📄 main.dart                        ← Entry + routes + MultiProvider
 │
-├── 📱 lib/views/                    ── VIEW LAYER ──
-│   ├── splash_screen.dart           Module 1: Particle field + shield logo
-│   ├── home_screen.dart             Module 2: Animated rings + sensor data
-│   ├── history_screen.dart          Module 3: Session cards + filter chips
-│   └── settings_screen.dart         Module 4: EN🇬🇧 / FR🇫🇷 language switcher
+├── 📱 lib/views/
+│   ├── splash_screen.dart              Module 1: Particles + shield logo
+│   ├── home_screen.dart                Module 2: Animated rings + sensors
+│   ├── history_screen.dart             Module 3: Sessions + analytics
+│   ├── settings_screen.dart            Module 4: Language + thresholds
+│   └── driver_mode_screen.dart         Module 5: Yango whitelist + status
 │
-├── 🧠 lib/viewmodels/               ── VIEWMODEL LAYER ──
-│   ├── driving_viewmodel.dart       Module 5: Core state (ChangeNotifier)
-│   └── language_viewmodel.dart      Module 6: Bilingual locale switching
+├── 🧠 lib/viewmodels/
+│   ├── driving_viewmodel.dart          Module 6: Core MVVM state + sensors
+│   ├── language_viewmodel.dart         Module 7: EN/FR switching
+│   └── driver_mode_viewmodel.dart      Module 8: Driver mode + whitelist
 │
-├── 📦 lib/models/                   ── DATA MODELS ──
-│   └── driving_log.dart             Module 7: DrivingLog data class
+├── 📦 lib/models/
+│   └── driving_log.dart                Module 9: DrivingLog data class
 │
-├── ⚙️  lib/logic/                   ── BUSINESS LOGIC ──
-│   └── driving_detector.dart        Module 8: Detection algorithm
+├── 🔌 lib/services/
+│   ├── supabase_service.dart           Module 10: Cloud DB (CRUD + Auth)
+│   └── background_service.dart         Module 11: Foreground service
 │
-├── 🔌 lib/services/                 ── EXTERNAL SERVICES ──
-│   ├── sensor_manager.dart          Module 9: Hardware sensor streams
-│   └── supabase_service.dart        Module 10: Cloud DB operations
+├── 🤖 android/app/src/main/
+│   ├── AndroidManifest.xml             ← All permissions declared
+│   └── kotlin/.../MainActivity.kt      ← Silent mode native MethodChannel
 │
-└── 🧪 test/                         ── TESTING (Sprint 3) ──
+└── 🧪 test/
     ├── driving_detector_test.dart
     └── sensor_manager_test.dart
 ```
@@ -325,10 +350,49 @@ driving_auto_silencer/
 | ▶️ Manual control | One-tap Start / Stop monitoring | 1 | ✅ Done |
 | 🌍 Bilingual EN/FR | Full English + French with one tap | 1 | ✅ Done |
 | 🎨 Sentinel Glow UI | Animated rings, particles, glass cards | 1 | ✅ Done |
-| ☁️ Supabase logging | Session events saved to cloud | 2 | 🔄 In Progress |
-| 📜 Session history | View and filter all past sessions | 2 | 🔄 In Progress |
+| 🔧 Sensitivity sliders | Adjust motion & noise thresholds | 1 | ✅ Done |
+| ☁️ Supabase logging | Sessions auto-saved to cloud database | 2 | ✅ Done |
+| 📜 Session history | View, filter and delete past sessions | 2 | ✅ Done |
+| 📊 Analytics dialog | Trips, time, silences, safe sessions | 2 | ✅ Done |
+| 🔄 Background service | Runs silently when app is closed | 2 | ✅ Done |
+| 🚖 Driver Mode | Yango/inDrive whitelist when silenced | 2 | ✅ Done |
+| 🟢 Availability status | Available / Busy / Offline status | 2 | ✅ Done |
+| 🔒 Row Level Security | Each user sees only their own data | 2 | ✅ Done |
 | 🧪 Unit tests | Automated tests for all logic | 3 | 🔜 Upcoming |
 | 📦 APK release | Installable on any Android 8+ device | 3 | 🔜 Upcoming |
+
+---
+
+## 🚖 Driver Mode — For Yango & Professional Drivers
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                   DRIVER MODE SCREEN                      │
+│                                                           │
+│  🚖 Driver Mode                          [● ON]          │
+│  "Yango & order apps stay active                          │
+│   while phone is silenced"                                │
+│                                                           │
+│  MY STATUS                                               │
+│  [🟢 Available]    [🔴 Busy]    [⚫ Offline]             │
+│                                                           │
+│  ALLOWED APPS WHEN DRIVING               3 active        │
+│  ──────────────────────────────────────────────          │
+│  RIDE-HAILING                                            │
+│  🚖 Yango              ✅ enabled                        │
+│  🚗 inDrive            ☐  disabled                       │
+│  ⚫ Uber Driver         ☐  disabled                       │
+│  🟢 Bolt Driver        ☐  disabled                       │
+│                                                           │
+│  DELIVERY                                                │
+│  📦 Glovo              ☐  disabled                       │
+│  🛵 Lalamove           ☐  disabled                       │
+│                                                           │
+│  ESSENTIAL                                               │
+│  📞 Phone Calls        🔒 Always on                      │
+│  🗺️  Google Maps       🔒 Always on                      │
+└──────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -344,10 +408,13 @@ driving_auto_silencer/
 │ Typography           │ Space Grotesk + Manrope           │
 │ Motion Sensor        │ sensors_plus ^6.1.1              │
 │ Noise Detection      │ noise_meter ^5.0.2               │
-│ Cloud Backend        │ Supabase (PostgreSQL)            │
+│ Background Service   │ flutter_foreground_task ^8.x     │
+│ Cloud Backend        │ Supabase (PostgreSQL + Auth)      │
+│ Environment vars     │ flutter_dotenv ^5.2.1            │
 │ Permissions          │ permission_handler ^11.3.1       │
 │ State Management     │ provider ^6.1.5                  │
 │ Localization         │ flutter_localizations            │
+│ Fonts                │ google_fonts ^6.2.1              │
 │ Target Platform      │ Android API 27+ (Android 8.0+)  │
 │ IDE                  │ VS Code + Android Studio         │
 │ Version Control      │ Git + GitHub (Organisation)      │
@@ -359,24 +426,56 @@ driving_auto_silencer/
 ## 🗄️ Database Schema
 
 ```sql
--- Supabase Cloud — PostgreSQL
--- Table: driving_logs
-
-CREATE TABLE driving_logs (
-  id            UUID         DEFAULT gen_random_uuid() PRIMARY KEY,
-  created_at    TIMESTAMPTZ  DEFAULT now() NOT NULL,
-  status        TEXT         NOT NULL,        -- 'DRIVING' | 'NOT_DRIVING'
-  motion_level  FLOAT        NOT NULL,        -- m/s² from accelerometer
-  noise_level   FLOAT        NOT NULL,        -- dB from microphone
-  duration_min  INTEGER      DEFAULT 0        -- session length in minutes
+-- ── TABLE 1: profiles ─────────────────────────────────────────────
+CREATE TABLE profiles (
+  id                 UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  created_at         TIMESTAMPTZ DEFAULT now(),
+  email              TEXT,
+  full_name          TEXT,
+  avatar_url         TEXT,
+  preferred_language TEXT DEFAULT 'fr'
 );
 
--- Sample data (matches what you see in the History screen)
-INSERT INTO driving_logs VALUES
-  ('1', '2026-03-18 08:30', 'DRIVING',     2.4, 68.0, 24),
-  ('2', '2026-03-18 07:15', 'NOT_DRIVING', 0.3, 42.0, 12),
-  ('3', '2026-03-17 18:45', 'NOT_DRIVING', 0.1, 35.0, 45),
-  ('4', '2026-03-17 09:12', 'DRIVING',     1.8, 62.0,  8);
+-- ── TABLE 2: driving_logs ─────────────────────────────────────────
+CREATE TABLE driving_logs (
+  id            UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at    TIMESTAMPTZ DEFAULT now() NOT NULL,
+  user_id       UUID        REFERENCES auth.users(id) ON DELETE CASCADE,
+  status        TEXT        NOT NULL CHECK (status IN ('DRIVING','NOT_DRIVING')),
+  motion_level  FLOAT       NOT NULL DEFAULT 0,
+  noise_level   FLOAT       NOT NULL DEFAULT 0,
+  duration_min  INTEGER     DEFAULT 0,
+  latitude      FLOAT,
+  longitude     FLOAT
+);
+
+-- ── TABLE 3: app_settings ─────────────────────────────────────────
+CREATE TABLE app_settings (
+  user_id           UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  motion_threshold  FLOAT   DEFAULT 1.5,
+  noise_threshold   FLOAT   DEFAULT 60.0,
+  language          TEXT    DEFAULT 'fr',
+  notifications_on  BOOLEAN DEFAULT true
+);
+
+-- ── Row Level Security ────────────────────────────────────────────
+ALTER TABLE profiles     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE driving_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app_settings ENABLE ROW LEVEL SECURITY;
+
+-- Auto-create profile + settings on signup
+CREATE OR REPLACE FUNCTION handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO profiles (id, email) VALUES (NEW.id, NEW.email);
+  INSERT INTO app_settings (user_id) VALUES (NEW.id);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 ```
 
 ---
@@ -387,33 +486,49 @@ INSERT INTO driving_logs VALUES
 ╔════════════════════════════════════════════════════════════════╗
 ║  SPRINT 1 — "Make It Work"                      ✅ COMPLETE   ║
 ╠════════════════════════════════════════════════════════════════╣
-║  ✅ Flutter project + MVVM architecture                        ║
-║  ✅ "Sentinel Glow" design system                              ║
-║  ✅ Splash screen (particle field + shield logo)               ║
-║  ✅ Home screen (safe state — green animated rings)            ║
-║  ✅ Home screen (driving state — red alert + pulse)            ║
-║  ✅ History screen (session cards + filters + pills)           ║
-║  ✅ Settings screen (EN/FR language switcher)                  ║
-║  ✅ DrivingViewModel with full state management                ║
-║  ✅ Bilingual support (English + French)                       ║
+║  ✅ Flutter project setup + MVVM architecture                  ║
+║  ✅ "Sentinel Glow" design system (Space Grotesk + Manrope)   ║
+║  ✅ Splash screen — particle field + floating shield logo      ║
+║  ✅ Home screen — safe state (green animated rings)            ║
+║  ✅ Home screen — driving state (red pulse rings + alert)      ║
+║  ✅ History screen — session cards + filter chips + pills      ║
+║  ✅ Settings screen — EN/FR language + sensitivity sliders     ║
+║  ✅ DrivingViewModel — state management via Provider           ║
+║  ✅ Bilingual support — English and French                     ║
+║  ✅ Real accelerometer sensor integration (500ms stream)       ║
+║  ✅ Real microphone noise detection (continuous)               ║
+║  ✅ Driving detection algorithm (motion + noise thresholds)    ║
+║  ✅ Silent mode via Android MethodChannel (MainActivity.kt)    ║
+║  ✅ AndroidManifest — all required permissions                 ║
 ╚════════════════════════════════════════════════════════════════╝
 
 ╔════════════════════════════════════════════════════════════════╗
-║  SPRINT 2 — "Make It Remember"               🔄 IN PROGRESS   ║
+║  SPRINT 2 — "Make It Remember"                  ✅ COMPLETE   ║
 ╠════════════════════════════════════════════════════════════════╣
-║  ⬜ Supabase project + driving_logs table                      ║
-║  ⬜ Flutter ↔ Supabase live connection                         ║
-║  ⬜ Auto-save session on status change                         ║
-║  ⬜ History screen pulls from real database                    ║
+║  ✅ Supabase project — 3 tables: profiles, logs, settings     ║
+║  ✅ Row Level Security — users see only their own data         ║
+║  ✅ Auto-trigger — profile + settings created on signup        ║
+║  ✅ Flutter ↔ Supabase connection via flutter_dotenv          ║
+║  ✅ Auto-save session to cloud on status change                ║
+║  ✅ History screen loads real data from Supabase cloud         ║
+║  ✅ Analytics dialog — trips, time, silences, safe sessions    ║
+║  ✅ Swipe-to-delete session cards (Dismissible widget)         ║
+║  ✅ Background foreground service (runs when app is closed)    ║
+║  ✅ Driver Mode — Yango/inDrive/Uber whitelist                 ║
+║  ✅ Availability status — Available / Busy / Offline           ║
+║  ✅ App whitelist by category (ride-hailing, delivery, nav)    ║
+║  ✅ Real user feedback integrated — Yango driver interview     ║
 ╚════════════════════════════════════════════════════════════════╝
 
 ╔════════════════════════════════════════════════════════════════╗
 ║  SPRINT 3 — "Make It Professional"              🔜 UPCOMING   ║
 ╠════════════════════════════════════════════════════════════════╣
 ║  ⬜ Unit tests — DrivingDetector (100% coverage target)        ║
-║  ⬜ Unit tests — SensorManager                                 ║
+║  ⬜ Unit tests — SensorManager stream testing                  ║
+║  ⬜ Widget tests — HomeScreen state changes                    ║
 ║  ⬜ Full project documentation                                 ║
 ║  ⬜ APK build + install on physical device                     ║
+║  ⬜ Performance profiling + battery optimisation               ║
 ╚════════════════════════════════════════════════════════════════╝
 ```
 
@@ -424,10 +539,10 @@ INSERT INTO driving_logs VALUES
 ### Prerequisites
 
 ```bash
-flutter doctor    # must show ✅ Flutter + ✅ Android toolchain
+flutter doctor   # must show ✅ Flutter + ✅ Android toolchain
 ```
 
-| Tool | Version |
+| Tool | Minimum Version |
 |---|---|
 | Flutter | ≥ 3.0.0 |
 | Dart | ≥ 3.0.0 |
@@ -436,22 +551,26 @@ flutter doctor    # must show ✅ Flutter + ✅ Android toolchain
 ### Installation
 
 ```bash
-# Clone
+# 1. Clone the repository
 git clone https://github.com/androit-development/autosilencer-flutter.git
 cd autosilencer-flutter
 
-# Install dependencies
+# 2. Install dependencies
 flutter pub get
 
-# Run on emulator or connected device
+# 3. Create your .env file at project root (never commit this file)
+SUPABASE_URL=https://yourproject.supabase.co
+SUPABASE_ANON_KEY=eyJhbGci...
+
+# 4. Run on emulator or connected device
 flutter run
 ```
 
-### Build Release APK *(Sprint 3)*
+### Build Release APK
 
 ```bash
 flutter build apk --release
-# → build/app/outputs/flutter-apk/app-release.apk
+# Output: build/app/outputs/flutter-apk/app-release.apk
 ```
 
 ---
@@ -462,32 +581,15 @@ flutter build apk --release
 <tr>
 <td align="center" width="50%">
 
-### 🧑‍💻 Erwan — KFJerwan
-**Flutter / Dart Developer**
-
 [![GitHub](https://img.shields.io/badge/GitHub-KFJerwan-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/KFJerwan)
 
-Responsible for:
-- Flutter MVVM architecture
-- UI screens + animations
-- Sensor integration (Sprint 1)
-- Supabase backend (Sprint 2)
-- Unit tests (Sprint 3)
 
 </td>
 <td align="center" width="50%">
 
-### 🧑‍💻 Teammate
-**Kotlin Developer**
 
-[![GitHub](https://img.shields.io/badge/GitHub-Teammate-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/androit-development)
 
-Responsible for:
-- Kotlin + Jetpack Compose version
-- Android-native sensors
-- Room database
-- Kotlin coroutines & Flow
-- Kotlin unit tests
+[![GitHub](https://img.shields.io/badge/GitHub-Androit--Dev-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/androit-development)
 
 </td>
 </tr>
@@ -498,34 +600,34 @@ Responsible for:
 ```
 main          ←── protected: stable reviewed code only
   │
-  ├── start            ← initial setup + first screens  [current]
-  ├── feat/sensors     ← Sprint 1: sensor integration
-  ├── feat/backend     ← Sprint 2: Supabase connection
-  └── feat/tests       ← Sprint 3: unit tests
+  ├── start              ← initial setup + first screens
+  ├── feat/sensors       ← Sprint 1: sensor integration
+  ├── feat/backend       ← Sprint 2: Supabase + Driver Mode
+  └── feat/tests         ← Sprint 3: unit tests
 
 Commit convention:
-  feat:  new feature
-  fix:   bug fix
-  docs:  documentation update
-  test:  test files
-  style: UI/design changes
+  feat:   new feature
+  fix:    bug fix
+  docs:   documentation
+  test:   test files
+  style:  UI / design
 
 Pull Request rule:
   Every branch → PR → teammate reviews → merge to main
 ```
 
-
+---
 
 <div align="center">
 
-**SE 3242 — Android Application Development**
-
 **ICT University, Yaoundé, Cameroon 🇨🇲**
 
-
+**Organisation: [Androit Development](https://github.com/androit-development)**
 
 <br/>
 
-*Built with ❤️  — because every safe arrival matters.*
+*Built with ❤️ in Cameroon — because every safe arrival matters.*
 
 <img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0:2979FF,50:1a3a6e,100:060E1E&height=120&section=footer"/>
+
+</div>
