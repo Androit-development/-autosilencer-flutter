@@ -9,7 +9,7 @@ import '../constants/app_constants.dart';
 
 // TOP-LEVEL callback — MUST be outside any class
 @pragma('vm:entry-point')
-void startCallback() {
+void backgroundCallback() {
   FlutterForegroundTask.setTaskHandler(AutoSilencerTaskHandler());
 }
 
@@ -141,7 +141,7 @@ class BackgroundServiceManager {
       notificationText: 'Monitoring your driving silently...',
       notificationIcon: null,
       notificationButtons: [],
-      callback: startCallback,
+      callback: backgroundCallback,
     );
   }
 

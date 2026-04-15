@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../main.dart';
+import '../theme/index.dart';
+import '../main.dart' show AppShell;
 import '../viewmodels/language_viewmodel.dart';
 import '../viewmodels/driving_viewmodel.dart';
 import '../services/background_service.dart';
