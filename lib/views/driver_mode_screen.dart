@@ -9,7 +9,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../main.dart';
+import '../theme/index.dart';
 import '../viewmodels/driver_mode_viewmodel.dart';
 import '../viewmodels/language_viewmodel.dart';
 

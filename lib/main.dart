@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import 'theme/index.dart';
 import 'viewmodels/driving_viewmodel.dart';
 import 'viewmodels/language_viewmodel.dart';
 import 'services/background_service.dart';
@@ -16,60 +16,6 @@ import 'views/settings_screen.dart';
 import 'viewmodels/driver_mode_viewmodel.dart';
 
 
-// ── Colors ────────────────────────────────────────────────────────────
-class AppColors {
-  AppColors._();
-  static const bgLowest         = Color(0xFF060E1E);
-  static const bgCardHigh       = Color(0xFF222A3B);
-  static const bgCardHighest    = Color(0xFF2D3546);
-  static const primary          = Color(0xFFB0C6FF);
-  static const primaryContainer = Color(0xFF558DFF);
-  static const tertiary         = Color(0xFF00E475);
-  static const error            = Color(0xFFFFB4AB);
-  static const errorContainer   = Color(0xFF93000A);
-  static const onSurface        = Color(0xFFDBE2F9);
-  static const onSurfaceVariant = Color(0xFFC2C6D7);
-  static const outline          = Color(0xFF8C90A0);
-  static const outlineVariant   = Color(0xFF424655);
-
-  static Color primaryGlow(double o)  => const Color(0xFFB0C6FF).withOpacity(o);
-  static Color tertiaryGlow(double o) => const Color(0xFF00E475).withOpacity(o);
-  static Color errorGlow(double o)    => const Color(0xFFFFB4AB).withOpacity(o);
-}
-
-// ── Text styles ───────────────────────────────────────────────────────
-class AppText {
-  AppText._();
-  static TextStyle headline({Color color = AppColors.onSurface, double size = 28}) =>
-      GoogleFonts.spaceGrotesk(fontSize: size, fontWeight: FontWeight.w700, color: color, letterSpacing: -0.5);
-  static TextStyle label({Color color = AppColors.onSurfaceVariant, double size = 11}) =>
-      GoogleFonts.spaceGrotesk(fontSize: size, fontWeight: FontWeight.w600, color: color, letterSpacing: 2.0);
-  static TextStyle body({Color color = AppColors.onSurfaceVariant, double size = 14}) =>
-      GoogleFonts.manrope(fontSize: size, fontWeight: FontWeight.w400, color: color, height: 1.5);
-  static TextStyle bodyBold({Color color = AppColors.onSurface, double size = 14}) =>
-      GoogleFonts.manrope(fontSize: size, fontWeight: FontWeight.w600, color: color);
-  static TextStyle number({Color color = AppColors.primary, double size = 28}) =>
-      GoogleFonts.spaceGrotesk(fontSize: size, fontWeight: FontWeight.w700, color: color);
-  static TextStyle display({Color color = AppColors.onSurface, double size = 44}) =>
-      GoogleFonts.spaceGrotesk(fontSize: size, fontWeight: FontWeight.w800, color: color, letterSpacing: -1.5);
-}
-
-// ── Glass card ────────────────────────────────────────────────────────
-BoxDecoration glassCard({Color? leftBorderColor}) {
-  const bc = AppColors.outlineVariant;
-  return BoxDecoration(
-    color: AppColors.bgCardHigh.withOpacity(0.4),
-    borderRadius: BorderRadius.circular(16),
-    border: leftBorderColor != null
-        ? Border(
-            left:   BorderSide(color: leftBorderColor.withOpacity(0.6), width: 4),
-            right:  BorderSide(color: bc.withOpacity(0.15)),
-            top:    BorderSide(color: bc.withOpacity(0.15)),
-            bottom: BorderSide(color: bc.withOpacity(0.15)),
-          )
-        : Border.all(color: bc.withOpacity(0.15)),
-  );
-}
 
 // ══════════════════════════════════════════════════════════════════════
 Future<void> main() async {
@@ -291,4 +237,4 @@ class _Btn extends StatelessWidget {
       ]),
     ),
   );
-}
+}
