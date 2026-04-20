@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
 import 'home_screen.dart';
@@ -24,6 +25,8 @@ class _LoginScreenState extends State<LoginScreen> {
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_email', emailController.text.trim());
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -127,10 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: InputDecoration(
                     labelText: 'Email Address',
                     labelStyle: const TextStyle(color: Colors.white38),
-                    prefixIcon: const Icon(
-                      Icons.email_outlined,
-                      color: Colors.blue,
-                    ),
+                    prefixIcon: const Icon(Icons.email_outlined, color: Colors.blue),
                     filled: true,
                     fillColor: Colors.white10,
                     enabledBorder: OutlineInputBorder(
@@ -139,10 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(
-                        color: Colors.blue,
-                        width: 2,
-                      ),
+                      borderSide: const BorderSide(color: Colors.blue, width: 2),
                     ),
                   ),
                 ),
@@ -154,17 +151,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: InputDecoration(
                     labelText: 'Password',
                     labelStyle: const TextStyle(color: Colors.white38),
-                    prefixIcon: const Icon(
-                      Icons.lock_outline,
-                      color: Colors.blue,
-                    ),
+                    prefixIcon: const Icon(Icons.lock_outline, color: Colors.blue),
                     suffixIcon: IconButton(
                       icon: Icon(
                         showPassword ? Icons.visibility_off : Icons.visibility,
                         color: Colors.white38,
                       ),
-                      onPressed: () =>
-                          setState(() => showPassword = !showPassword),
+                      onPressed: () => setState(() => showPassword = !showPassword),
                     ),
                     filled: true,
                     fillColor: Colors.white10,
@@ -174,10 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(
-                        color: Colors.blue,
-                        width: 2,
-                      ),
+                      borderSide: const BorderSide(color: Colors.blue, width: 2),
                     ),
                   ),
                 ),
@@ -193,10 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       );
                     },
-                    child: const Text(
-                      'Forgot Password?',
-                      style: TextStyle(color: Colors.blue),
-                    ),
+                    child: const Text('Forgot Password?', style: TextStyle(color: Colors.blue)),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -207,9 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: isLoading ? null : login,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                     child: isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
@@ -227,19 +212,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 20),
                 Row(
                   children: [
-                    Expanded(
-                      child: Divider(color: Colors.white12, thickness: 1),
-                    ),
+                    Expanded(child: Divider(color: Colors.white12, thickness: 1)),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        'OR',
-                        style: TextStyle(color: Colors.white38, fontSize: 12),
-                      ),
+                      child: Text('OR', style: TextStyle(color: Colors.white38, fontSize: 12)),
                     ),
-                    Expanded(
-                      child: Divider(color: Colors.white12, thickness: 1),
-                    ),
+                    Expanded(child: Divider(color: Colors.white12, thickness: 1)),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -250,20 +228,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: () async {
                       await Supabase.instance.client.auth.signInWithOAuth(
                         OAuthProvider.google,
-                        redirectTo: 'http://localhost:63729',
+                        redirectTo: 'io.supabase.driving_auto_silencer://login-callback',
                       );
                     },
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.white24),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
-                    icon: const Icon(
-                      Icons.g_mobiledata,
-                      size: 28,
-                      color: Colors.white,
-                    ),
+                    icon: const Icon(Icons.g_mobiledata, size: 28, color: Colors.white),
                     label: const Text(
                       'Continue with Google',
                       style: TextStyle(color: Colors.white, fontSize: 15),
@@ -275,26 +247,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
-                        "Don't have an account? ",
-                        style: TextStyle(color: Colors.white38),
-                      ),
+                      const Text("Don't have an account? ", style: TextStyle(color: Colors.white38)),
                       GestureDetector(
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(
-                              builder: (context) => const SignupScreen(),
-                            ),
+                            MaterialPageRoute(builder: (context) => const SignupScreen()),
                           );
                         },
                         child: const Text(
                           'Sign Up',
-                          style: TextStyle(
-                            color: Colors.blue,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                          ),
+                          style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 15),
                         ),
                       ),
                     ],

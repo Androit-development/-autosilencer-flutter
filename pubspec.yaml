@@ -47,6 +47,7 @@ dependencies:
   # Handles phone permissions (microphone, etc.)
   permission_handler: ^11.3.1
   google_sign_in: ^7.2.0
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:
