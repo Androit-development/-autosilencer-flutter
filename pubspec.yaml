@@ -45,6 +45,3 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
-  # Tell Flutter about our .env file
-  assets:
-    - .env

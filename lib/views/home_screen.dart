@@ -1,11 +1,13 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../main.dart';
 import '../viewmodels/driving_viewmodel.dart';
 import '../viewmodels/language_viewmodel.dart';
-import '../services/permissions_service.dart';
+import '../theme/index.dart';
+import '../widgets/home/index.dart';
 import '../services/background_service.dart';
+import '../services/permissions_service.dart';
+import '../main.dart' show AppShellState;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -75,11 +77,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         children: [
           // ── Ambient background glows ──────────────────────────────────
           Positioned(top: 60, left: -100,
-            child: _GlowBlob(color: AppColors.primary, r: 250, o: 0.09)),
+            child: GlowBlob(color: AppColors.primary, radius: 250, opacity: 0.09)),
           Positioned(bottom: 150, right: -100,
-            child: _GlowBlob(color: stateColor, r: 260, o: 0.11)),
+            child: GlowBlob(color: stateColor, radius: 260, opacity: 0.11)),
           Positioned(top: 300, right: -60,
-            child: _GlowBlob(color: AppColors.tertiary, r: 180, o: 0.05)),
+            child: GlowBlob(color: AppColors.tertiary, radius: 180, opacity: 0.05)),
 
           SafeArea(
             child: FadeTransition(
@@ -90,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: Column(
                   children: [
                     // ── Top bar ─────────────────────────────────────────
-                    _TopBar(lang: lang),
+                    HomeTopBar(lang: lang),
                     const SizedBox(height: 20),
 
                     // ── Status label ────────────────────────────────────
@@ -367,45 +369,7 @@ class _StatusRing extends StatelessWidget {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TOP BAR
-// ─────────────────────────────────────────────────────────────────────────────
-class _TopBar extends StatelessWidget {
-  final LanguageViewModel lang;
-  const _TopBar({required this.lang});
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
-      child: Row(
-        children: [
-          // Shield icon + app name
-          Icon(Icons.shield_rounded, color: AppColors.primary, size: 22),
-          const SizedBox(width: 10),
-          Text('AutoSilencer', style: AppText.headline(size: 18)),
-          const Spacer(),
-
-          // Language toggle pill
-          GestureDetector(
-            onTap: lang.toggle,
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: AppColors.bgCardHigh.withOpacity(0.6),
-                borderRadius: BorderRadius.circular(8),
-                border:
-                    Border.all(color: Colors.white.withOpacity(0.1)),
-              ),
-              child: Text(lang.langLabel,
-                  style:
-                      AppText.label(color: AppColors.primary, size: 11)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STAT CARD
@@ -740,27 +704,7 @@ class _PermissionCheckItem extends StatelessWidget {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
-class _GlowBlob extends StatelessWidget {
-  final Color color;
-  final double r, o;
-  const _GlowBlob({required this.color, required this.r, required this.o});
 
-  @override
-  Widget build(BuildContext context) => Container(
-    width: r * 2, height: r * 2,
-    decoration: BoxDecoration(
-      shape: BoxShape.circle,
-      boxShadow: [
-        BoxShadow(
-          color: color.withOpacity(o),
-          blurRadius: r * 1.6,
-          spreadRadius: r * 0.25,
-        ),
-      ],
-    ),
-  );
-}
 
 class _DashedRingPainter extends CustomPainter {
   final Color color;

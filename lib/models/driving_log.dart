@@ -23,6 +23,7 @@ class DrivingLog {
   final double motionLevel;      // how much the phone moved (m/s²)
   final double noiseLevel;       // how loud the environment was (dB)
   final int durationMinutes;     // how long the session lasted
+  final String? drivingApp;      // which app was being used (yango, uber, bolt, etc)
 
   const DrivingLog({
     required this.id,
@@ -31,6 +32,7 @@ class DrivingLog {
     required this.motionLevel,
     required this.noiseLevel,
     required this.durationMinutes,
+    this.drivingApp,
   });
 
   // ── Label shown in the History screen ───────────────────────────
@@ -92,4 +94,32 @@ class DrivingLog {
            '${timestamp.year} • '
            '${h12.toString().padLeft(2, "0")}:$m $pm';
   }
+
+  // ── Get app emoji and name ───────────────────────────────────────
+  String get appEmoji {
+    switch (drivingApp?.toLowerCase()) {
+      case 'yango':   return '🚕';
+      case 'uber':    return '🚗';
+      case 'bolt':    return '⚡';
+      case 'indrive': return '🚙';
+      case 'glovo':   return '📦';
+      case 'jumia':   return '🍔';
+      default:        return '📱';
+    }
+  }
+
+  String get appName {
+    switch (drivingApp?.toLowerCase()) {
+      case 'yango':   return 'Yango';
+      case 'uber':    return 'Uber';
+      case 'bolt':    return 'Bolt';
+      case 'indrive': return 'inDrive';
+      case 'glovo':   return 'Glovo';
+      case 'jumia':   return 'Jumia Food';
+      default:        return drivingApp ?? 'Unknown';
+    }
+  }
+
+  // ── Check if this was a Yango session ────────────────────────────
+  bool get isYangoSession => drivingApp?.toLowerCase() == 'yango';
 }

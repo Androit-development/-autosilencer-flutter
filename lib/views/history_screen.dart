@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../main.dart';
+import '../theme/index.dart';
 import '../viewmodels/driving_viewmodel.dart';
 import '../viewmodels/language_viewmodel.dart';
 import '../models/driving_log.dart';
@@ -15,6 +15,7 @@ class _HistoryScreenState extends State<HistoryScreen>
     with SingleTickerProviderStateMixin {
 
   int _filterIndex = 0;
+  String? _selectedApp; // Filter by specific driving app
   late final AnimationController _staggerCtrl;
 
   @override
@@ -38,18 +39,39 @@ class _HistoryScreenState extends State<HistoryScreen>
 
   List<DrivingLog> _filtered(List<DrivingLog> logs) {
     final now = DateTime.now();
+    var result = logs;
+    
+    // Filter by time period
     switch (_filterIndex) {
       case 1:
-        return logs.where((l) =>
+        result = result.where((l) =>
           l.timestamp.year  == now.year &&
           l.timestamp.month == now.month &&
           l.timestamp.day   == now.day).toList();
+        break;
       case 2:
         final weekAgo = now.subtract(const Duration(days: 7));
-        return logs.where((l) => l.timestamp.isAfter(weekAgo)).toList();
-      default:
-        return logs;
+        result = result.where((l) => l.timestamp.isAfter(weekAgo)).toList();
+        break;
     }
+    
+    // Filter by app
+    if (_selectedApp != null) {
+      result = result.where((l) => l.drivingApp?.toLowerCase() == _selectedApp?.toLowerCase()).toList();
+    }
+    
+    return result;
+  }
+
+  // Get all unique apps from logs
+  List<String> _getUniqueDrivingApps(List<DrivingLog> logs) {
+    final apps = <String>{};
+    for (var log in logs) {
+      if (log.drivingApp != null && log.drivingApp!.isNotEmpty) {
+        apps.add(log.drivingApp!);
+      }
+    }
+    return apps.toList()..sort();
   }
 
   void _showAnalytics(BuildContext ctx, DrivingViewModel vm, LanguageViewModel lang) {
@@ -239,28 +261,62 @@ class _HistoryScreenState extends State<HistoryScreen>
                       // ── Filter chips ───────────────────────────────────
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(children: [
-                              _FilterChip(
-                                label: lang.t('All', 'Toutes'),
-                                active: _filterIndex == 0,
-                                onTap: () => setState(() => _filterIndex = 0),
+                          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Time filter
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(children: [
+                                  _FilterChip(
+                                    label: lang.t('All', 'Toutes'),
+                                    active: _filterIndex == 0,
+                                    onTap: () => setState(() => _filterIndex = 0),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _FilterChip(
+                                    label: lang.t('Today', "Aujourd'hui"),
+                                    active: _filterIndex == 1,
+                                    onTap: () => setState(() => _filterIndex = 1),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _FilterChip(
+                                    label: lang.t('This week', 'Cette semaine'),
+                                    active: _filterIndex == 2,
+                                    onTap: () => setState(() => _filterIndex = 2),
+                                  ),
+                                ]),
                               ),
-                              const SizedBox(width: 8),
-                              _FilterChip(
-                                label: lang.t('Today', "Aujourd'hui"),
-                                active: _filterIndex == 1,
-                                onTap: () => setState(() => _filterIndex = 1),
-                              ),
-                              const SizedBox(width: 8),
-                              _FilterChip(
-                                label: lang.t('This week', 'Cette semaine'),
-                                active: _filterIndex == 2,
-                                onTap: () => setState(() => _filterIndex = 2),
-                              ),
-                            ]),
+                              
+                              // App filter (if apps are being tracked)
+                              const SizedBox(height: 12),
+                              if (_getUniqueDrivingApps(vm.logs).isNotEmpty)
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: [
+                                      _FilterChip(
+                                        label: lang.t('All Apps', 'Toutes Apps'),
+                                        active: _selectedApp == null,
+                                        onTap: () => setState(() => _selectedApp = null),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      ..._getUniqueDrivingApps(vm.logs).map((app) {
+                                        final dlog = vm.logs.firstWhere((l) => l.drivingApp == app);
+                                        return Padding(
+                                          padding: const EdgeInsets.only(right: 8),
+                                          child: _FilterChip(
+                                            label: '${dlog.appEmoji} ${dlog.appName}',
+                                            active: _selectedApp == app,
+                                            onTap: () => setState(() => _selectedApp = app),
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ],
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                       ),
@@ -433,6 +489,21 @@ class _SessionCard extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(log.formattedDate(lang.isEnglish),
                         style: AppText.body(size: 12)),
+                    
+                    // 🚕 Show which app if available
+                    if (log.drivingApp != null && log.drivingApp!.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Text(log.appEmoji, style: const TextStyle(fontSize: 14)),
+                          const SizedBox(width: 4),
+                          Text(
+                            log.appName,
+                            style: AppText.body(size: 12, color: AppColors.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 )),
 
@@ -455,8 +526,6 @@ class _SessionCard extends StatelessWidget {
               const SizedBox(height: 12),
 
               // ✅ FIX: Progress bar with NO yellow line
-              // Used Stack instead of LinearProgressIndicator
-              // LinearProgressIndicator had a yellow theme color bleed
               Row(children: [
                 Expanded(
                   child: Stack(children: [
