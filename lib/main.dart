@@ -14,10 +14,9 @@ import 'views/splash_screen.dart';
 import 'views/home_screen.dart';
 import 'views/history_screen.dart';
 import 'views/settings_screen.dart';
+import 'views/app_freeze_settings_screen.dart';
 import 'login_screen.dart';
 import 'viewmodels/driver_mode_viewmodel.dart';
-
-
 
 // ══════════════════════════════════════════════════════════════════════
 Future<void> main() async {
@@ -25,7 +24,7 @@ Future<void> main() async {
   // Use hardcoded Supabase credentials from supabase_config.dart
   // (The .env file is not bundled in the APK, causing initialization to fail)
   await Supabase.initialize(
-    url:     SupabaseConfig.supabaseUrl,
+    url: SupabaseConfig.supabaseUrl,
     anonKey: SupabaseConfig.supabaseAnonKey,
   );
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -45,7 +44,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => drivingVM),
         ChangeNotifierProvider(create: (_) => LanguageViewModel()),
         ChangeNotifierProvider(
-          create: (_) => DriverModeViewModel()..loadPrefs(),
+          create: (_) => DriverModeViewModel()..load(),
         ),
       ],
       child: const AutoSilencerApp(),
@@ -74,8 +73,8 @@ Future<void> _startBackgroundDetection(DrivingViewModel vm) async {
   BackgroundServiceManager.addDataListener((data) {
     if (data is Map) {
       final isDriving = data['isDriving'] as bool? ?? false;
-      final motion    = (data['motion'] as num?)?.toDouble() ?? 0.0;
-      final noise     = (data['noise']  as num?)?.toDouble() ?? 0.0;
+      final motion = (data['motion'] as num?)?.toDouble() ?? 0.0;
+      final noise = (data['noise'] as num?)?.toDouble() ?? 0.0;
       vm.updateFromBackground(
         isDriving: isDriving,
         motion: motion,
@@ -124,8 +123,9 @@ class AutoSilencerApp extends StatelessWidget {
       initialRoute: '/splash',
       routes: {
         '/splash': (_) => const SplashScreen(),
-        '/login':  (_) => const LoginScreen(),
-        '/home':   (_) => const AppShell(),
+        '/login': (_) => const LoginScreen(),
+        '/home': (_) => const AppShell(),
+        '/app-freeze-settings': (_) => const AppFreezeSettingsScreen(),
       },
     );
   }
@@ -188,8 +188,8 @@ class AppShellState extends State<AppShell> {
           setState(() => _idx = i);
           if (i == 1) context.read<DrivingViewModel>().loadLogs();
         },
-        homeLabel:     lang.t('HOME',     'HOME'),
-        historyLabel:  lang.t('HISTORY',  'HISTORIQUE'),
+        homeLabel: lang.t('HOME', 'HOME'),
+        historyLabel: lang.t('HISTORY', 'HISTORIQUE'),
         settingsLabel: lang.t('SETTINGS', 'RÉGLAGES'),
       ),
     );
@@ -200,9 +200,12 @@ class _BottomNav extends StatelessWidget {
   final int idx;
   final Function(int) onTap;
   final String homeLabel, historyLabel, settingsLabel;
-  const _BottomNav({required this.idx, required this.onTap,
-    required this.homeLabel, required this.historyLabel,
-    required this.settingsLabel});
+  const _BottomNav(
+      {required this.idx,
+      required this.onTap,
+      required this.homeLabel,
+      required this.historyLabel,
+      required this.settingsLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -210,17 +213,34 @@ class _BottomNav extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 24),
       height: 68,
       decoration: BoxDecoration(
-        color: AppColors.bgCardHighest.withOpacity(0.70),
+        color: AppColors.bgCardHighest.withValues(alpha: 0.70),
         borderRadius: BorderRadius.circular(40),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 24, offset: const Offset(0, 8))],
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.4),
+              blurRadius: 24,
+              offset: const Offset(0, 8))
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _Btn(icon: Icons.home_rounded,      label: homeLabel,     sel: idx==0, onTap: ()=>onTap(0)),
-          _Btn(icon: Icons.history_rounded,    label: historyLabel,  sel: idx==1, onTap: ()=>onTap(1)),
-          _Btn(icon: Icons.settings_outlined,  label: settingsLabel, sel: idx==2, onTap: ()=>onTap(2)),
+          _Btn(
+              icon: Icons.home_rounded,
+              label: homeLabel,
+              sel: idx == 0,
+              onTap: () => onTap(0)),
+          _Btn(
+              icon: Icons.history_rounded,
+              label: historyLabel,
+              sel: idx == 1,
+              onTap: () => onTap(1)),
+          _Btn(
+              icon: Icons.settings_outlined,
+              label: settingsLabel,
+              sel: idx == 2,
+              onTap: () => onTap(2)),
         ],
       ),
     );
@@ -228,25 +248,38 @@ class _BottomNav extends StatelessWidget {
 }
 
 class _Btn extends StatelessWidget {
-  final IconData icon; final String label; final bool sel; final VoidCallback onTap;
-  const _Btn({required this.icon, required this.label, required this.sel, required this.onTap});
+  final IconData icon;
+  final String label;
+  final bool sel;
+  final VoidCallback onTap;
+  const _Btn(
+      {required this.icon,
+      required this.label,
+      required this.sel,
+      required this.onTap});
   @override
   Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    behavior: HitTestBehavior.opaque,
-    child: AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: sel ? AppColors.primary.withOpacity(0.12) : Colors.transparent,
-        borderRadius: BorderRadius.circular(32),
-      ),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icon, color: sel ? AppColors.primary : AppColors.onSurfaceVariant, size: 22),
-        const SizedBox(height: 3),
-        Text(label, style: AppText.label(color: sel ? AppColors.primary : AppColors.onSurfaceVariant, size: 9)),
-      ]),
-    ),
-  );
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: sel
+                ? AppColors.primary.withValues(alpha: 0.12)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(32),
+          ),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Icon(icon,
+                color: sel ? AppColors.primary : AppColors.onSurfaceVariant,
+                size: 22),
+            const SizedBox(height: 3),
+            Text(label,
+                style: AppText.label(
+                    color: sel ? AppColors.primary : AppColors.onSurfaceVariant,
+                    size: 9)),
+          ]),
+        ),
+      );
 }
-

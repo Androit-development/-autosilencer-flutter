@@ -29,8 +29,9 @@ class AutoSilencerTaskHandler extends TaskHandler {
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
-    debugPrint('🚀 AutoSilencer service started');
+    debugPrint('�\ude80 AutoSilencer service started at ${DateTime.now()}');
     _startSensors();
+    debugPrint('✅ Service initialization complete');
   }
 
   @override
@@ -73,23 +74,49 @@ class AutoSilencerTaskHandler extends TaskHandler {
   }
 
   void _startSensors() {
-    _accelSub = accelerometerEventStream(
-      samplingPeriod: const Duration(milliseconds: 250), // 4x per second for better sensitivity
-    ).listen(
-      (e) {
-        final mag = sqrt(e.x * e.x + e.y * e.y + e.z * e.z);
-        _motion = (mag - 9.8).abs();
-      },
-      onError: (_) => _motion = 0.0,
-    );
+    try {
+      debugPrint('�\udcb5 Starting accelerometer stream...');
+      _accelSub = accelerometerEventStream(
+        samplingPeriod: const Duration(milliseconds: 250), // 4x per second for better sensitivity
+      ).listen(
+        (e) {
+          final mag = sqrt(e.x * e.x + e.y * e.y + e.z * e.z);
+          _motion = (mag - 9.8).abs();
+          if (_motion > 0.5) {
+            debugPrint('Motion detected: ${_motion.toStringAsFixed(2)} m/s\u00b2');
+          }
+        },
+        onError: (e) {
+          debugPrint('❌ Accelerometer stream error: $e');
+          _motion = 0.0;
+        },
+        cancelOnError: false, // Continue listening even if there's an error
+      );
+      debugPrint('✅ Accelerometer stream initialized');
+    } catch (e) {
+      debugPrint('❌ Failed to initialize accelerometer: $e');
+      _motion = 0.0;
+    }
 
     try {
+      debugPrint('�\udcb5 Starting noise meter...');
       _noiseMeter = NoiseMeter();
       _noiseSub = _noiseMeter!.noise.listen(
-        (e) => _noise = e.meanDecibel,
-        onError: (_) => _noise = 0.0,
+        (e) {
+          _noise = e.meanDecibel;
+          if (_noise > 60) {
+            debugPrint('Noise detected: ${_noise.toStringAsFixed(1)} dB');
+          }
+        },
+        onError: (e) {
+          debugPrint('❌ Noise meter error: $e');
+          _noise = 0.0;
+        },
+        cancelOnError: false,
       );
-    } catch (_) {
+      debugPrint('✅ Noise meter initialized');
+    } catch (e) {
+      debugPrint('❌ Failed to initialize noise meter: $e');
       _noise = 0.0;
     }
   }

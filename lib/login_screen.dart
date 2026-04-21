@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
-import 'home_screen.dart';
 import 'supabase_config.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -13,11 +12,11 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final emailController    = TextEditingController();
+  final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  bool isLoading       = false;
+  bool isLoading = false;
   bool isGoogleLoading = false;
-  bool showPassword    = false;
+  bool showPassword = false;
 
   @override
   void dispose() {
@@ -28,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // ── Email + Password sign in ──────────────────────────────────────
   Future<void> login() async {
-    final email    = emailController.text.trim();
+    final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
@@ -38,39 +37,61 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => isLoading = true);
     try {
+      debugPrint('🕐 Attempting login for: $email');
       await Supabase.instance.client.auth.signInWithPassword(
         email: email,
         password: password,
       );
       // Login successful - navigate to home
+      debugPrint('✅ Login successful');
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/home');
       }
     } on AuthException catch (e) {
-      _showSnack(e.message, isError: true);
+      debugPrint('❌ AuthException: ${e.message}');
+      String errorMsg = e.message;
+      if (e.message.contains('Invalid login credentials')) {
+        errorMsg = 'Invalid email or password';
+      } else if (e.message.contains('Email not confirmed')) {
+        errorMsg = 'Please verify your email first';
+      } else if (e.message.contains('User already registered')) {
+        errorMsg = 'This email is already registered';
+      }
+      _showSnack(errorMsg, isError: true);
     } catch (e) {
-      _showSnack('Login failed. Check your connection.', isError: true);
+      debugPrint('❌ Login error: $e');
+      String errorMsg = 'Login failed: ';
+      if (e.toString().contains('SocketException')) {
+        errorMsg += 'Check your internet connection';
+      } else if (e.toString().contains('TimeoutException')) {
+        errorMsg += 'Request timed out. Try again';
+      } else {
+        errorMsg += 'Unknown error. Try again';
+      }
+      _showSnack(errorMsg, isError: true);
     }
     if (mounted) setState(() => isLoading = false);
   }
 
-  // ── Google sign in ─────────────────────────────────────────────────
-  // FIX: was calling signInWithOAuth but not handling the redirect correctly
   Future<void> signInWithGoogle() async {
     setState(() => isGoogleLoading = true);
     try {
+      debugPrint('🕐 Attempting Google sign in...');
       await Supabase.instance.client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: SupabaseConfig.redirectUrl,
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
       // After browser redirects back and login is successful, navigate to home
+      debugPrint('✅ Google sign in successful');
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/home');
       }
     } on AuthException catch (e) {
+      debugPrint('❌ Google AuthException: ${e.message}');
       _showSnack(e.message, isError: true);
     } catch (e) {
+      debugPrint('❌ Google sign in error: $e');
       _showSnack('Google sign in failed. Try again.', isError: true);
     }
     if (mounted) setState(() => isGoogleLoading = false);
@@ -115,7 +136,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: const Color(0xFF2979FF),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF2979FF).withOpacity(0.5),
+                              color: const Color(0xFF2979FF)
+                                  .withValues(alpha: 0.5),
                               blurRadius: 30,
                               spreadRadius: 5,
                             ),
@@ -128,15 +150,19 @@ class _LoginScreenState extends State<LoginScreen> {
                       const Text(
                         'AUTO SILENCER',
                         style: TextStyle(
-                          fontSize: 28, fontWeight: FontWeight.bold,
-                          color: Colors.white, letterSpacing: 4,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 4,
                         ),
                       ),
                       const SizedBox(height: 6),
                       const Text(
                         'Drive Safe. Stay Focused.',
                         style: TextStyle(
-                            fontSize: 14, color: Colors.white38, letterSpacing: 1.5),
+                            fontSize: 14,
+                            color: Colors.white38,
+                            letterSpacing: 1.5),
                       ),
                     ],
                   ),
@@ -145,8 +171,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 50),
 
                 const Text('Welcome Back',
-                    style: TextStyle(fontSize: 24,
-                        fontWeight: FontWeight.bold, color: Colors.white)),
+                    style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
                 const SizedBox(height: 6),
                 const Text('Sign in to continue',
                     style: TextStyle(fontSize: 14, color: Colors.white38)),
@@ -181,7 +209,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () => Navigator.push(context,
+                    onPressed: () => Navigator.push(
+                        context,
                         MaterialPageRoute(
                             builder: (_) => const ForgotPasswordScreen())),
                     child: const Text('Forgot Password?',
@@ -193,7 +222,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 // Login button
                 SizedBox(
-                  width: double.infinity, height: 55,
+                  width: double.infinity,
+                  height: 55,
                   child: ElevatedButton(
                     onPressed: isLoading ? null : login,
                     style: ElevatedButton.styleFrom(
@@ -204,8 +234,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : const Text('LOGIN',
-                            style: TextStyle(fontSize: 16, color: Colors.white,
-                                fontWeight: FontWeight.bold, letterSpacing: 2)),
+                            style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 2)),
                   ),
                 ),
 
@@ -226,7 +259,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 // Google button — FIX: now calls signInWithGoogle()
                 SizedBox(
-                  width: double.infinity, height: 55,
+                  width: double.infinity,
+                  height: 55,
                   child: OutlinedButton.icon(
                     onPressed: isGoogleLoading ? null : signInWithGoogle,
                     style: OutlinedButton.styleFrom(
@@ -236,7 +270,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     icon: isGoogleLoading
                         ? const SizedBox(
-                            width: 20, height: 20,
+                            width: 20,
+                            height: 20,
                             child: CircularProgressIndicator(
                                 color: Colors.white, strokeWidth: 2))
                         : const Icon(Icons.g_mobiledata,
@@ -260,7 +295,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       const Text("Don't have an account? ",
                           style: TextStyle(color: Colors.white38)),
                       GestureDetector(
-                        onTap: () => Navigator.push(context,
+                        onTap: () => Navigator.push(
+                            context,
                             MaterialPageRoute(
                                 builder: (_) => const SignupScreen())),
                         child: const Text('Sign Up',
@@ -321,8 +357,7 @@ class _DarkField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide:
-              const BorderSide(color: Color(0xFF2979FF), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF2979FF), width: 2),
         ),
       ),
     );

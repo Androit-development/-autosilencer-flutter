@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../theme/index.dart';
 import '../../constants/app_constants.dart';
 import '../../viewmodels/driving_viewmodel.dart';
@@ -232,7 +231,8 @@ class StatCard extends StatelessWidget {
             const SizedBox(height: UISizes.paddingXl),
             Text(label, style: AppText.label(size: 10)),
             const SizedBox(height: UISizes.paddingSm),
-            Text(value, style: AppText.number(color: AppColors.onSurface, size: 22)),
+            Text(value,
+                style: AppText.number(color: AppColors.onSurface, size: 22)),
             const SizedBox(height: UISizes.paddingMd),
             Row(
               children: List.generate(
@@ -295,13 +295,16 @@ class AlertBanner extends StatelessWidget {
         decoration: glassCard(leftBorderColor: AppColors.error),
         child: Row(
           children: [
-            Icon(Icons.warning_rounded, color: AppColors.error, size: UISizes.iconMd),
+            Icon(Icons.warning_rounded,
+                color: AppColors.error, size: UISizes.iconMd),
             const SizedBox(width: UISizes.paddingMd),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: AppText.bodyBold(color: AppColors.error, size: 13)),
+                  Text(title,
+                      style:
+                          AppText.bodyBold(color: AppColors.error, size: 13)),
                   const SizedBox(height: 2),
                   Text(message, style: AppText.body(size: 12)),
                 ],
@@ -329,19 +332,19 @@ class GlowBlob extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    width: radius * 2,
-    height: radius * 2,
-    decoration: BoxDecoration(
-      shape: BoxShape.circle,
-      boxShadow: [
-        BoxShadow(
-          color: color.withOpacity(opacity),
-          blurRadius: radius * 1.6,
-          spreadRadius: radius * 0.25,
+        width: radius * 2,
+        height: radius * 2,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(opacity),
+              blurRadius: radius * 1.6,
+              spreadRadius: radius * 0.25,
+            ),
+          ],
         ),
-      ],
-    ),
-  );
+      );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -437,7 +440,8 @@ class SensorStatCard extends StatelessWidget {
             Container(
               width: 6,
               height: 6,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: chipColor),
+              decoration:
+                  BoxDecoration(shape: BoxShape.circle, color: chipColor),
             ),
             const SizedBox(width: 5),
             Text(
@@ -520,7 +524,9 @@ class MonitoringActionButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              isOn ? Icons.stop_circle_outlined : Icons.play_circle_outline_rounded,
+              isOn
+                  ? Icons.stop_circle_outlined
+                  : Icons.play_circle_outline_rounded,
               color: Colors.white,
               size: 22,
             ),
@@ -598,7 +604,8 @@ class MonitoringActionButton extends StatelessWidget {
               Navigator.pop(ctx);
               await PermissionsService.requestAllPermissions();
             },
-            child: Text(lang.t('Request Permissions', 'Demander les permissions')),
+            child:
+                Text(lang.t('Request Permissions', 'Demander les permissions')),
           ),
         ],
       ),

@@ -8,7 +8,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/index.dart';
 import '../viewmodels/language_viewmodel.dart';
 import '../services/auto_start_service.dart';
@@ -22,13 +21,12 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
-
   late final AnimationController _fadeCtrl;
   late final AnimationController _pulseCtrl;
   late final AnimationController _floatCtrl;
-  late final Animation<double>   _fadeAnim;
-  late final Animation<double>   _pulseAnim;
-  late final Animation<double>   _floatAnim;
+  late final Animation<double> _fadeAnim;
+  late final Animation<double> _pulseAnim;
+  late final Animation<double> _floatAnim;
 
   bool _permissionsGranted = false;
   bool _checking = false;
@@ -36,7 +34,8 @@ class _SplashScreenState extends State<SplashScreen>
   final List<_Particle> _particles = List.generate(35, (_) {
     final rng = math.Random();
     return _Particle(
-      x: rng.nextDouble(), y: rng.nextDouble(),
+      x: rng.nextDouble(),
+      y: rng.nextDouble(),
       r: rng.nextDouble() * 1.5 + 1.0,
       opacity: rng.nextDouble() * 0.5 + 0.15,
     );
@@ -45,17 +44,20 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
-    _fadeCtrl  = AnimationController(vsync: this,
-        duration: const Duration(milliseconds: 1400))..forward();
-    _fadeAnim  = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
+    _fadeCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1400))
+      ..forward();
+    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
 
-    _pulseCtrl = AnimationController(vsync: this,
-        duration: const Duration(milliseconds: 2000))..repeat(reverse: true);
+    _pulseCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 2000))
+      ..repeat(reverse: true);
     _pulseAnim = Tween<double>(begin: 1.0, end: 1.10)
         .animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
 
-    _floatCtrl = AnimationController(vsync: this,
-        duration: const Duration(milliseconds: 3000))..repeat(reverse: true);
+    _floatCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 3000))
+      ..repeat(reverse: true);
     _floatAnim = Tween<double>(begin: -8.0, end: 8.0)
         .animate(CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut));
 
@@ -85,7 +87,7 @@ class _SplashScreenState extends State<SplashScreen>
         _permissionsGranted = true;
         _checking = false;
       });
-      
+
       // After permissions are granted, check authentication
       Future.delayed(const Duration(milliseconds: 500), _navigateAfterAuth);
     } else {
@@ -96,10 +98,10 @@ class _SplashScreenState extends State<SplashScreen>
   // ── Navigate based on authentication status ────────────────────────
   Future<void> _navigateAfterAuth() async {
     if (!mounted) return;
-    
+
     // Check if user is already authenticated
     final isAuthenticated = SupabaseService.isLoggedIn;
-    
+
     if (isAuthenticated) {
       // User is logged in → go to home
       Navigator.pushReplacementNamed(context, '/home');
@@ -125,10 +127,14 @@ class _SplashScreenState extends State<SplashScreen>
           ),
 
           // Glow blobs
-          Positioned(top: size.height * 0.25, left: -40,
-            child: _GlowBlob(color: AppColors.primary, r: 160, o: 0.12)),
-          Positioned(bottom: size.height * 0.2, right: -40,
-            child: _GlowBlob(color: AppColors.tertiary, r: 140, o: 0.08)),
+          Positioned(
+              top: size.height * 0.25,
+              left: -40,
+              child: _GlowBlob(color: AppColors.primary, r: 160, o: 0.12)),
+          Positioned(
+              bottom: size.height * 0.2,
+              right: -40,
+              child: _GlowBlob(color: AppColors.tertiary, r: 140, o: 0.08)),
 
           FadeTransition(
             opacity: _fadeAnim,
@@ -151,8 +157,7 @@ class _SplashScreenState extends State<SplashScreen>
 
                   const SizedBox(height: 36),
 
-                  Text('AutoSilencer',
-                    style: AppText.headline(size: 44)),
+                  Text('AutoSilencer', style: AppText.headline(size: 44)),
 
                   const SizedBox(height: 12),
 
@@ -160,7 +165,7 @@ class _SplashScreenState extends State<SplashScreen>
                     padding: const EdgeInsets.symmetric(horizontal: 48),
                     child: Text(
                       lang.t('Drive Focused. Stay Safe.',
-                             'Conduisez concentré. Restez en sécurité.'),
+                          'Conduisez concentré. Restez en sécurité.'),
                       textAlign: TextAlign.center,
                       style: AppText.body(size: 16),
                     ),
@@ -172,13 +177,16 @@ class _SplashScreenState extends State<SplashScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _FeaturePill(icon: Icons.volume_off_rounded,
+                      _FeaturePill(
+                          icon: Icons.volume_off_rounded,
                           label: lang.t('Auto-Silence', 'Auto-Silence')),
                       const SizedBox(width: 8),
-                      _FeaturePill(icon: Icons.sensors_rounded,
+                      _FeaturePill(
+                          icon: Icons.sensors_rounded,
                           label: lang.t('AI Sensors', 'Capteurs IA')),
                       const SizedBox(width: 8),
-                      _FeaturePill(icon: Icons.cloud_outlined,
+                      _FeaturePill(
+                          icon: Icons.cloud_outlined,
                           label: lang.t('Cloud Logs', 'Cloud Logs')),
                     ],
                   ),
@@ -262,7 +270,7 @@ class _SplashScreenState extends State<SplashScreen>
                             label: _permissionsGranted
                                 ? lang.t('Get Started →', 'Commencer →')
                                 : lang.t('Grant Permissions →',
-                                         'Accorder les permissions →'),
+                                    'Accorder les permissions →'),
                             color1: _permissionsGranted
                                 ? AppColors.primary
                                 : AppColors.error,
@@ -311,10 +319,12 @@ class _ShieldLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 140, height: 140,
+      width: 140,
+      height: 140,
       child: Stack(alignment: Alignment.center, children: [
         Container(
-          width: 140, height: 140,
+          width: 140,
+          height: 140,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: RadialGradient(colors: [
@@ -323,16 +333,14 @@ class _ShieldLogo extends StatelessWidget {
             ]),
           ),
         ),
-        Icon(Icons.shield_rounded, size: 110,
-            color: const Color(0xFF0D2A5E)),
+        Icon(Icons.shield_rounded, size: 110, color: const Color(0xFF0D2A5E)),
         ShaderMask(
           shaderCallback: (b) => const LinearGradient(
             colors: [AppColors.primary, AppColors.primaryContainer],
           ).createShader(b),
           child: Icon(Icons.shield_rounded, size: 80, color: Colors.white),
         ),
-        const Icon(Icons.directions_car_rounded,
-            size: 36, color: Colors.white),
+        const Icon(Icons.directions_car_rounded, size: 36, color: Colors.white),
       ]),
     );
   }
@@ -365,24 +373,31 @@ class _GradientButton extends StatelessWidget {
   final String label;
   final Color color1, color2;
   final VoidCallback onTap;
-  const _GradientButton({required this.label, required this.color1,
-      required this.color2, required this.onTap});
+  const _GradientButton(
+      {required this.label,
+      required this.color1,
+      required this.color2,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: double.infinity, height: 60,
+        width: double.infinity,
+        height: 60,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(32),
           gradient: LinearGradient(
-            begin: Alignment.topLeft, end: Alignment.bottomRight,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [color1, color2],
           ),
           boxShadow: [
-            BoxShadow(color: color1.withOpacity(0.35),
-                blurRadius: 24, offset: const Offset(0, 8)),
+            BoxShadow(
+                color: color1.withOpacity(0.35),
+                blurRadius: 24,
+                offset: const Offset(0, 8)),
           ],
         ),
         child: Center(
@@ -400,19 +415,27 @@ class _GlowBlob extends StatelessWidget {
   const _GlowBlob({required this.color, required this.r, required this.o});
   @override
   Widget build(BuildContext context) => Container(
-    width: r*2, height: r*2,
-    decoration: BoxDecoration(
-      shape: BoxShape.circle,
-      boxShadow: [BoxShadow(color: color.withOpacity(o),
-          blurRadius: r*1.5, spreadRadius: r*0.3)],
-    ),
-  );
+        width: r * 2,
+        height: r * 2,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+                color: color.withOpacity(o),
+                blurRadius: r * 1.5,
+                spreadRadius: r * 0.3)
+          ],
+        ),
+      );
 }
 
 class _Particle {
   final double x, y, r, opacity;
-  const _Particle({required this.x, required this.y,
-      required this.r, required this.opacity});
+  const _Particle(
+      {required this.x,
+      required this.y,
+      required this.r,
+      required this.opacity});
 }
 
 class _ParticlePainter extends CustomPainter {
@@ -422,11 +445,13 @@ class _ParticlePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     for (final p in particles) {
       canvas.drawCircle(
-        Offset(p.x * size.width, p.y * size.height), p.r,
+        Offset(p.x * size.width, p.y * size.height),
+        p.r,
         Paint()..color = Colors.white.withOpacity(p.opacity),
       );
     }
   }
+
   @override
   bool shouldRepaint(_ParticlePainter old) => false;
 }

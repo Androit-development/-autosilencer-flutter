@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum DriverStatus { available, busy, offline }
@@ -25,12 +26,15 @@ class DriverModeViewModel extends ChangeNotifier {
   static const _driverPromptDoneKey = 'driver_mode_prompt_done';
   static const _isYangoDriverKey = 'driver_mode_is_yango_driver';
   static const _appPrefix = 'driver_mode_app_';
+  static const MethodChannel _deviceAdminChannel = MethodChannel('autosilencer/device_admin');
 
   bool _isDriverMode = false;
   bool _hasAnsweredDriverPrompt = false;
   bool _isYangoDriver = false;
   DriverStatus _status = DriverStatus.available;
   bool _isLoaded = false;
+  VoidCallback? _onDriverModeActivated;
+  VoidCallback? _onDriverModeDeactivated;
 
   bool get isDriverMode => _isDriverMode;
   bool get hasAnsweredDriverPrompt => _hasAnsweredDriverPrompt;
@@ -46,6 +50,8 @@ class DriverModeViewModel extends ChangeNotifier {
     }
     return map;
   }
+
+  List<WhitelistedApp> get allApps => _apps;
 
   final List<WhitelistedApp> _apps = [
     WhitelistedApp(
@@ -105,11 +111,48 @@ class DriverModeViewModel extends ChangeNotifier {
 
   Future<void> toggleDriverMode() async {
     _isDriverMode = !_isDriverMode;
-    if (!_isDriverMode) {
+    debugPrint('🚗 Driver mode: ${_isDriverMode ? 'ENABLED' : 'DISABLED'}');
+    
+    if (_isDriverMode) {
+      // Activate driver mode
+      await _freezeApps();
+      _onDriverModeActivated?.call();
+    } else {
+      // Deactivate driver mode
+      await _unfreezeApps();
       _status = DriverStatus.available;
+      _onDriverModeDeactivated?.call();
     }
+    
     notifyListeners();
     await _persist();
+  }
+
+  void setOnDriverModeActivated(VoidCallback? callback) {
+    _onDriverModeActivated = callback;
+  }
+
+  void setOnDriverModeDeactivated(VoidCallback? callback) {
+    _onDriverModeDeactivated = callback;
+  }
+
+  Future<void> _freezeApps() async {
+    try {
+      final frozenApps = _apps.where((a) => !a.isEnabled).map((a) => a.id).toList();
+      debugPrint('❄️ Freezing apps: $frozenApps');
+      await _deviceAdminChannel.invokeMethod('freezeApps', {'apps': frozenApps});
+    } catch (e) {
+      debugPrint('❌ Failed to freeze apps: $e');
+    }
+  }
+
+  Future<void> _unfreezeApps() async {
+    try {
+      debugPrint('🔥 Unfreezing all apps');
+      await _deviceAdminChannel.invokeMethod('unfreezeAllApps');
+    } catch (e) {
+      debugPrint('❌ Failed to unfreeze apps: $e');
+    }
   }
 
   Future<void> setStatus(DriverStatus status) async {
