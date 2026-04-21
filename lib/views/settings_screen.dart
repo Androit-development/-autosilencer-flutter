@@ -6,6 +6,7 @@ import '../main.dart' show AppShell;
 import '../viewmodels/language_viewmodel.dart';
 import '../viewmodels/driving_viewmodel.dart';
 import '../services/background_service.dart';
+import 'driver_mode_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});

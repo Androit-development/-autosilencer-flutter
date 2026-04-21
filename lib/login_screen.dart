@@ -42,7 +42,10 @@ class _LoginScreenState extends State<LoginScreen> {
         email: email,
         password: password,
       );
-      // AuthWrapper stream handles navigation automatically
+      // Login successful - navigate to home
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
     } on AuthException catch (e) {
       _showSnack(e.message, isError: true);
     } catch (e) {
@@ -61,7 +64,10 @@ class _LoginScreenState extends State<LoginScreen> {
         redirectTo: SupabaseConfig.redirectUrl,
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
-      // After browser redirects back, AuthWrapper stream picks up the session
+      // After browser redirects back and login is successful, navigate to home
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
     } on AuthException catch (e) {
       _showSnack(e.message, isError: true);
     } catch (e) {

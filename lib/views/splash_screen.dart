@@ -8,9 +8,11 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/index.dart';
 import '../viewmodels/language_viewmodel.dart';
 import '../services/auto_start_service.dart';
+import '../services/supabase_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -83,8 +85,27 @@ class _SplashScreenState extends State<SplashScreen>
         _permissionsGranted = true;
         _checking = false;
       });
+      
+      // After permissions are granted, check authentication
+      Future.delayed(const Duration(milliseconds: 500), _navigateAfterAuth);
     } else {
       setState(() => _checking = false);
+    }
+  }
+
+  // ── Navigate based on authentication status ────────────────────────
+  Future<void> _navigateAfterAuth() async {
+    if (!mounted) return;
+    
+    // Check if user is already authenticated
+    final isAuthenticated = SupabaseService.isLoggedIn;
+    
+    if (isAuthenticated) {
+      // User is logged in → go to home
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      // User is NOT logged in → go to login
+      Navigator.pushReplacementNamed(context, '/login');
     }
   }
 
@@ -252,8 +273,8 @@ class _SplashScreenState extends State<SplashScreen>
                               if (!_permissionsGranted) {
                                 await _checkAndStart();
                               } else {
-                                Navigator.pushReplacementNamed(
-                                    context, '/home');
+                                // Navigate based on auth status
+                                await _navigateAfterAuth();
                               }
                             },
                           ),
@@ -265,8 +286,8 @@ class _SplashScreenState extends State<SplashScreen>
 
                   Text(
                     lang.t(
-                      'No account required • Runs automatically',
-                      'Pas de compte requis • Fonctionne automatiquement',
+                      'Secure authentication • Runs automatically',
+                      'Authentification sécurisée • Fonctionne automatiquement',
                     ),
                     style: AppText.label(
                         color: AppColors.onSurfaceVariant.withOpacity(0.5),

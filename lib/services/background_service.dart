@@ -19,6 +19,7 @@ class AutoSilencerTaskHandler extends TaskHandler {
   double _motion = 0.0;
   double _noise = 0.0;
   bool _isDriving = false;
+  String _travelMode = 'stationary';
 
   StreamSubscription<AccelerometerEvent>? _accelSub;
   StreamSubscription<NoiseReading>? _noiseSub;
@@ -35,6 +36,7 @@ class AutoSilencerTaskHandler extends TaskHandler {
   @override
   Future<void> onRepeatEvent(DateTime timestamp) async {
     final bool was = _isDriving;
+    _travelMode = _classifyTravelMode(_motion, _noise);
     _isDriving = _motion > SensorThresholds.motionThreshold &&
         _noise > SensorThresholds.noiseThreshold;
 
@@ -58,6 +60,7 @@ class AutoSilencerTaskHandler extends TaskHandler {
       'motion': _motion,
       'noise': _noise,
       'isDriving': _isDriving,
+      'travelMode': _travelMode,
     });
   }
 
@@ -97,6 +100,18 @@ class AutoSilencerTaskHandler extends TaskHandler {
     } catch (e) {
       debugPrint('Silent mode error: $e');
     }
+  }
+
+  String _classifyTravelMode(double motion, double noise) {
+    if (motion > SensorThresholds.motionThreshold &&
+        noise > SensorThresholds.noiseThreshold) {
+      return 'driving';
+    }
+    if (motion > 0.75 && motion < SensorThresholds.motionThreshold &&
+        noise < SensorThresholds.noiseThreshold) {
+      return 'walking';
+    }
+    return 'stationary';
   }
 }
 

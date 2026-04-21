@@ -2,17 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'theme/index.dart';
+import 'supabase_config.dart';
 import 'viewmodels/driving_viewmodel.dart';
 import 'viewmodels/language_viewmodel.dart';
 import 'services/background_service.dart';
+import 'services/permissions_service.dart';
 import 'views/splash_screen.dart';
 import 'views/home_screen.dart';
 import 'views/history_screen.dart';
 import 'views/settings_screen.dart';
+import 'login_screen.dart';
 import 'viewmodels/driver_mode_viewmodel.dart';
 
 
@@ -20,10 +22,11 @@ import 'viewmodels/driver_mode_viewmodel.dart';
 // ══════════════════════════════════════════════════════════════════════
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
+  // Use hardcoded Supabase credentials from supabase_config.dart
+  // (The .env file is not bundled in the APK, causing initialization to fail)
   await Supabase.initialize(
-    url:     dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+    url:     SupabaseConfig.supabaseUrl,
+    anonKey: SupabaseConfig.supabaseAnonKey,
   );
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
@@ -41,7 +44,9 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => drivingVM),
         ChangeNotifierProvider(create: (_) => LanguageViewModel()),
-        ChangeNotifierProvider(create: (_) => DriverModeViewModel()),
+        ChangeNotifierProvider(
+          create: (_) => DriverModeViewModel()..loadPrefs(),
+        ),
       ],
       child: const AutoSilencerApp(),
     ),
@@ -59,7 +64,11 @@ Future<void> main() async {
 Future<void> _startBackgroundDetection(DrivingViewModel vm) async {
   // Small delay to let permissions settle after splash screen
   await Future.delayed(const Duration(seconds: 2));
-  await BackgroundServiceManager.startService();
+  final permissions = await PermissionsService.checkAllPermissions();
+  if ((permissions['microphone'] ?? false) &&
+      (permissions['sensors'] ?? false)) {
+    await BackgroundServiceManager.startService();
+  }
 
   // Listen for background service data so the UI reflects driving state
   BackgroundServiceManager.addDataListener((data) {
@@ -115,6 +124,7 @@ class AutoSilencerApp extends StatelessWidget {
       initialRoute: '/splash',
       routes: {
         '/splash': (_) => const SplashScreen(),
+        '/login':  (_) => const LoginScreen(),
         '/home':   (_) => const AppShell(),
       },
     );
