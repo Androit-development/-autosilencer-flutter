@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'supabase_config.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
@@ -22,10 +21,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Auto Silencer',
+      title: 'AutoSilencer',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2979FF)),
+        scaffoldBackgroundColor: const Color(0xFF060E1E),
       ),
       home: const AuthWrapper(),
     );
@@ -40,36 +40,39 @@ class AuthWrapper extends StatefulWidget {
 }
 
 class _AuthWrapperState extends State<AuthWrapper> {
-  bool _isLoading = true;
-  bool _isLoggedIn = false;
+  // Listen to Supabase auth state changes
+  // This handles Google OAuth callback automatically
+  late final Stream<AuthState> _authStream;
 
   @override
   void initState() {
     super.initState();
-    _checkSession();
-  }
-
-  Future<void> _checkSession() async {
-    final session = Supabase.instance.client.auth.currentSession;
-    final prefs = await SharedPreferences.getInstance();
-    final savedEmail = prefs.getString('user_email');
-    
-    setState(() {
-      _isLoggedIn = session != null || savedEmail != null;
-      _isLoading = false;
-    });
+    _authStream = Supabase.instance.client.auth.onAuthStateChange;
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(
-          child: CircularProgressIndicator(color: Colors.blue),
-        ),
-      );
-    }
-    return _isLoggedIn ? const HomeScreen() : const LoginScreen();
+    return StreamBuilder<AuthState>(
+      stream: _authStream,
+      builder: (context, snapshot) {
+        // Still connecting
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            backgroundColor: Color(0xFF060E1E),
+            body: Center(
+              child: CircularProgressIndicator(color: Color(0xFF2979FF)),
+            ),
+          );
+        }
+
+        // Check current session
+        final session = Supabase.instance.client.auth.currentSession;
+
+        if (session != null) {
+          return const HomeScreen();
+        }
+        return const LoginScreen();
+      },
+    );
   }
 }
