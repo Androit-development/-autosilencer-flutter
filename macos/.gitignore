@@ -5,3 +5,7 @@
 # Xcode-related
 **/dgph
 **/xcuserdata/
+# Flutter-generated plugin files
+**/GeneratedPluginRegistrant.java
+**/generated_plugin_registrant.dart
+**/GeneratedPluginRegistrant.swift
