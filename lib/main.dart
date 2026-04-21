@@ -80,6 +80,7 @@ Future<void> _startBackgroundDetection(DrivingViewModel vm) async {
 
 class AutoSilencerApp extends StatelessWidget {
   const AutoSilencerApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageViewModel>();
@@ -238,3 +239,4 @@ class _Btn extends StatelessWidget {
     ),
   );
 }
+>>>>>>> origin/main
